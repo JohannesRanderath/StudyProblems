@@ -1,0 +1,26 @@
+<ul class="navbar-nav me-auto">
+    <!-- nav items left -->
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "index" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/">Home</a>
+    </li>
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "calendar" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/calendar">Calendar</a>
+    </li>
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "pdfs" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/pdfs">Lecture presentations</a>
+    </li>
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "videos" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/videos">Lecture videos</a>
+    </li>
+</ul>
+
+<ul class="navbar-nav ms-auto">
+    <!-- nav items right -->
+    <li class="nav-item">
+        <a class="nav-link" href="/logout">Log out</a>
+    </li>
+</ul>

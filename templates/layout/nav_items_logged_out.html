@@ -1,0 +1,15 @@
+<ul class="navbar-nav me-auto">
+    <!-- nav items left -->
+</ul>
+
+<ul class="navbar-nav ms-auto">
+    <!-- nav items right -->
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "login" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/login">Log in</a>
+    </li>
+    <li class="nav-item">
+        <a {% if request.url_rule.endpoint == "register" %} class="nav-link active"
+            {% else %} class="nav-link" {% endif %} href="/register">Register</a>
+    </li>
+</ul>

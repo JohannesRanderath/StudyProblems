@@ -1,0 +1,29 @@
+body {
+    padding-top: 70px;
+}
+
+img {
+    max-width: 100%;
+}
+
+.main {
+    text-align: center;
+    overflow-x: auto;
+}
+
+.form-control {
+    display: inline-block;
+    width: auto;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #f5f5f5;
+    padding-bottom: 10px;
+}
+
+.form-group {
+    margin: 1rem;
+}
