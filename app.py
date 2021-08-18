@@ -6,7 +6,11 @@ import sqlite3
 
 from backend import is_logged_in, check_password_requirements, generate_password_hash, is_email, \
     verify_password, generate_email_confirmation_link, html_confirmation_email, decrypt_token, \
-    html_change_mail_email, generate_change_email_link
+    html_change_mail_email, generate_change_email_link, html_reset_password_mail, generate_password_reset_link
+
+# TODO: Change message mode to comply with redirects -> GET?
+# TODO: Add messages to redirects
+# TODO: Add labels to form elements
 
 app = Flask(__name__)
 
@@ -21,6 +25,15 @@ app.config["MAIL_PASSWORD"] = "hgtyawsgcnvsfpnm"
 app.config["MAIL_USE_SSL"] = True
 app.config["MAIL_DEFAULT_SENDER"] = "joranderathsg@gmail.com"
 mail = Mail(app)
+
+def send_email(recipient, subject, html):
+    recipients = [recipient]
+    msg = Message(recipients=recipients, subject=subject, html=html)
+    try:
+        mail.send(msg)
+    except:
+        return False
+    return True
 
 
 @app.route('/')
@@ -175,15 +188,69 @@ def change_email(token):
         return render_template("bad_change_email_link.html")
 
 
+@app.route("/reset_password/<token>", methods=["POST", "GET"])
+def reset_password(token):
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("new_password")
+        confirmation = request.form.get("confirmation")
+        print(0)
+        if not username:
+            print(1)
+            return render_template("reset_password.html",
+                                   messages=[{"type": "danger", "text": "Username required"}])
+        if not password:
+            print(2)
+            return render_template("reset_password.html",
+                                   messages=[{"type": "danger", "text": "Password required"}])
+        if not confirmation:
+            print(3)
+            return render_template("reset_password.html",
+                                   messages=[{"type": "danger", "text": "Please confirm password."}])
+        if not password == confirmation:
+            print(4)
+            return render_template("reset_password.html",
+                                   messages=[{"type": "danger", "text": "Passwords do not match."}])
+        if not check_password_requirements(password):
+            print(5)
+            return render_template("reset_password.html",
+                                   messages=[{"type": "danger", "text": "Password does not meet criteria."}])
+        db_con = sqlite3.connect("database.db")
+        db = db_con.cursor()
+        db.execute("UPDATE users SET hash=? WHERE username=?;", (generate_password_hash(password), username))
+        db_con.commit()
+        db_con.close()
+        print(6)
+        return redirect("/login")
+    else:
+        try:
+            username = decrypt_token(token, "reset-password-key")
+            print(username)
+            print(7)
+            return render_template("reset_password.html", username=username)
+        except Exception as e:
+            print(e)
+            return render_template("bad_password_reset_link.html")
 
-def send_email(recipient, subject, html):
-    recipients = [recipient]
-    msg = Message(recipients=recipients, subject=subject, html=html)
-    try:
-        mail.send(msg)
-    except:
-        return False
-    return True
+
+@app.route("/request_password_reset", methods=["POST", "GET"])
+def request_password_reset():
+    if request.method == "POST":
+        username = request.form.get("username")
+        if not username:
+            return render_template("request_password_reset.html",
+                            messages=[{"type": "danger", "text": "Username required"}])
+        db_con = sqlite3.connect("database.db")
+        db = db_con.cursor()
+        if not db.execute("SELECT email FROM users WHERE username=?;", (username, )):
+            db_con.close()
+            return render_template("request_password_reset.html",
+                                   messages=[{"type": "danger", "text": "Username doesn't exist or no email is associated with it."}])
+        email = db.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
+        send_email(email, "Reset password", html_reset_password_mail(generate_password_reset_link(username)))
+        return render_template("request_password_reset.html", messages=[{"type": "success", "text": "Reset link sent."}])
+    else:
+        return render_template("request_password_reset.html")
 
 
 if __name__ == '__main__':

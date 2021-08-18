@@ -68,12 +68,21 @@ def generate_change_email_link(old_email, new_email):
     return url_for("change_email", token=token, _external=True)
 
 
+def generate_password_reset_link(username):
+    token = ts.dumps(username, salt="reset-password-key")
+    return url_for("reset_password", token=token, _external=True)
+
+
 def html_confirmation_email(confirmation_link):
     return render_template("emails/confirm_email.html", confirmation_link=confirmation_link)
 
 
 def html_change_mail_email(confirm_new_email_link):
     return render_template("emails/confirm_new_email.html", confirm_new_email_link=confirm_new_email_link)
+
+
+def html_reset_password_mail(password_reset_link):
+    return render_template("emails/password_reset_email.html", password_reset_link=password_reset_link)
 
 
 def is_email(email):
