@@ -3,7 +3,7 @@
 ***REMOVED***
 ***REMOVED***
 
-    MAIL_SERVER = "smatp.gmail.com"
+***REMOVED***
 ***REMOVED***
     MAIL_USERNAME = "joranderathsg@gmail.com"
     MAIL_PASSWORD = "hgtyawsgcnvsfpnm"

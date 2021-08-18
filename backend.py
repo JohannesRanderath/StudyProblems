@@ -10,8 +10,6 @@ from itsdangerous import URLSafeTimedSerializer
 
 ts = URLSafeTimedSerializer("CS50")
 
-mail = Mail(current_app)
-
 # Setting up passlib to hash passwords
 # Using argon2 as hashing algorithm
 pwd_context = CryptContext(
@@ -97,6 +95,7 @@ def decrypt_token(token, salt):
 
 
 def send_email(recipient, subject, html):
+    mail = Mail(current_app)
     recipients = [recipient]
     msg = Message(recipients=recipients, subject=subject, html=html)
     try:

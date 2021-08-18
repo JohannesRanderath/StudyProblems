@@ -13,6 +13,9 @@ app.config.from_object("config.Config")
 
 Session(app)
 
+# TODO: export database handling to backend.py, if possible using one instance of database connection
+# TODO: password protect database
+
 
 @app.route('/')
 @is_logged_in
@@ -140,7 +143,7 @@ def register():
             db_connection.commit()
             db_connection.close()
             if not send_email(email, "Please confirm your email",
-                       html_confirmation_email(generate_email_confirmation_link(email))):
+                              html_confirmation_email(generate_email_confirmation_link(email))):
                 flash("An error occurred. Please try again later.", "danger")
                 return redirect("/")
 
