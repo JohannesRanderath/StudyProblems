@@ -28,6 +28,12 @@ def home():
     return render_template("index.html", messages=[])
 
 
+@app.route("/account", methods=["POST", "GET"])
+@is_logged_in
+def account():
+    return render_template("account.html")
+
+
 @app.route("/logout")
 @is_logged_in
 def logout():

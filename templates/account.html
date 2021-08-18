@@ -1,0 +1,34 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Account {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>Change password</h3>
+    <form action="/changepassword" method="post">
+        <div class="form-group">
+            <input class="form-control" autofocus type="password" name="old_password" placeholder="Old password" required>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="password" name="new_password" placeholder="New password" required>
+        </div>
+        <div class="form-group">
+            <input class="form-control" type="password" name="confirmation" placeholder="Confirm password" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Change password</button>
+    </form>
+    <br>
+    <hr>
+    <br>
+    <h3>Change / add email</h3>
+    <form action="/changeemail" method="post">
+        <div class="form-group">
+            <input class="form-control" autocomplete="off" name="new_email" placeholder="New email" type="text" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Add email</button>
+    </form>
+
+{% endblock %}
