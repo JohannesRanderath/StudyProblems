@@ -1,0 +1,13 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Confirmation Link invalid {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_out.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>ERROR: Invalid confirmation link</h3>
+    <p>You opened an invalid email confirmation link. Maybe it expired?</p>
+
+{% endblock %}

@@ -1,8 +1,14 @@
-from flask import render_template, redirect, session
-from passlib.context import CryptContext
+from flask import render_template, redirect, session, url_for
+from flask_mail import Message
+
 import re
 import sqlite3
 from functools import wraps
+
+from passlib.context import CryptContext
+from itsdangerous import URLSafeTimedSerializer
+
+ts = URLSafeTimedSerializer("CS50")
 
 # Setting up passlib to hash passwords
 # Using argon2 as hashing algorithm
@@ -51,3 +57,20 @@ def verify_password(username, password):
     if not correct_hash or not pwd_context.verify(password, correct_hash):
         return False
     return True
+
+
+def generate_email_confirmation_link(email):
+    token = ts.dumps(email, salt="email-confirmation-key")
+    return url_for('confirm', token=token, _external=True)
+
+
+def html_confirmation_email(confirmation_link):
+    return render_template("emails/confirm_email.html", confirmation_link=confirmation_link)
+
+
+def is_email(email):
+    return re.match("^.+@.+[.].+", email)
+
+
+def get_mail_from_token(token):
+    return ts.loads(token, salt="email-confirmation-key", max_age=3600)
