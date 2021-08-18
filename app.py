@@ -5,7 +5,8 @@ from flask_mail import Mail, Message
 import sqlite3
 
 from backend import is_logged_in, check_password_requirements, generate_password_hash, is_email, \
-    verify_password, generate_email_confirmation_link, html_confirmation_email, get_mail_from_token
+    verify_password, generate_email_confirmation_link, html_confirmation_email, decrypt_token, \
+    html_change_mail_email, generate_change_email_link
 
 app = Flask(__name__)
 
@@ -31,7 +32,47 @@ def home():
 @app.route("/account", methods=["POST", "GET"])
 @is_logged_in
 def account():
-    return render_template("account.html")
+    if request.method == "POST":
+        if request.form.get("type") == "change_password":
+            old_password = request.form.get("old_password")
+            new_password = request.form.get("new_password")
+            confirmation = request.form.get("confirmation")
+            if not old_password:
+                return render_template("account.html", messages=[{"type": "danger", "text": "Old password required"}])
+            if not new_password:
+                return render_template("account.html", messages=[{"type": "danger", "text": "New password required"}])
+            if not confirmation:
+                return render_template("account.html", messages=[{"type": "danger", "text": "Please confirm password"}])
+            if not verify_password(session["username"], generate_password_hash(old_password)):
+                return render_template("account.html", messages=[{"type": "danger", "text": "Wrong password"}])
+            if not new_password == confirmation:
+                return render_template("account.html", messages=[{"type": "danger", "text": "Passwords do not match"}])
+            db_con = sqlite3.connect("database.db")
+            db = db_con.cursor()
+            db.execute("UPDATE users SET hash=? WHERE username=?;",
+                       (generate_password_hash(new_password), session["username"]))
+            db_con.commit()
+            db_con.close()
+            return render_template("account.html", messages=[{"type": "success", "text": "Password changed!"}])
+        if request.form.get("type") == "change_email":
+            db_con = sqlite3.connect("database.db")
+            db = db_con.cursor()
+            new_email = request.form.get("new_email")
+            if not new_email:
+                db_con.close()
+                return render_template("account.html", messages=[{"type": "danger", "text": "New email required"}])
+            old_email = db.execute("SELECT email FROM users WHERE username=?;", (session["username"], )).fetchone()[0]
+            if not old_email:
+                db.execute("UPDATE users SET email=? WHERE username=?", (new_email, session["username"]))
+                db_con.commit()
+                db_con.close()
+                return render_template("account.html", messages=[{"type": "success", "text": "Email set."}])
+            else:
+                send_email(new_email, "Confirm new email", html_change_mail_email(generate_change_email_link(old_email, new_email)))
+                db_con.close()
+                return render_template("account.html", messages=[{"type": "success", "text": "Confirmation link sent!"}])
+    else:
+        return render_template("account.html")
 
 
 @app.route("/logout")
@@ -104,8 +145,9 @@ def register():
 @app.route("/confirm/<token>")
 def confirm(token):
     try:
-        email = get_mail_from_token(token)
-    except:
+        email = decrypt_token(token, "email-confirmation-key")
+    except Exception as e:
+        print(e)
         return render_template("bad_confirmation_link.html")
     db_con = sqlite3.connect("database.db")
     db = db_con.cursor()
@@ -114,6 +156,24 @@ def confirm(token):
     db_con.commit()
     db_con.close()
     return redirect("/")
+
+
+@app.route("/change_email/<token>")
+def change_email(token):
+    try:
+        data = decrypt_token(token, "change-email-key")
+        old_email = data["old_email"]
+        new_email = data["new_email"]
+        db_con = sqlite3.connect("database.db")
+        db = db_con.cursor()
+        db.execute("UPDATE users SET email=? WHERE email=?;", (new_email, old_email))
+        db_con.commit()
+        db_con.close()
+        return redirect("/")
+    except Exception as e:
+        print(e)
+        return render_template("bad_change_email_link.html")
+
 
 
 def send_email(recipient, subject, html):

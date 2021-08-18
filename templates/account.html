@@ -8,7 +8,8 @@
 {% block main %}
 
     <h3>Change password</h3>
-    <form action="/changepassword" method="post">
+    <form action="/account" method="post">
+        <input name="type" value="change_password" hidden required>
         <div class="form-group">
             <input class="form-control" autofocus type="password" name="old_password" placeholder="Old password" required>
         </div>
@@ -24,9 +25,10 @@
     <hr>
     <br>
     <h3>Change / add email</h3>
-    <form action="/changeemail" method="post">
+    <form action="/account" method="post">
+        <input name="type" value="change_email" hidden required>
         <div class="form-group">
-            <input class="form-control" autocomplete="off" name="new_email" placeholder="New email" type="text" required>
+            <input class="form-control" name="new_email" placeholder="New email" type="text" required>
         </div>
         <button class="btn btn-primary" type="submit">Add email</button>
     </form>

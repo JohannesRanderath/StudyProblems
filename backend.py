@@ -1,5 +1,4 @@
 from flask import render_template, redirect, session, url_for
-from flask_mail import Message
 
 import re
 import sqlite3
@@ -64,13 +63,22 @@ def generate_email_confirmation_link(email):
     return url_for('confirm', token=token, _external=True)
 
 
+def generate_change_email_link(old_email, new_email):
+    token = ts.dumps({"old_email": old_email, "new_email": new_email}, salt="change-email-key")
+    return url_for("change_email", token=token, _external=True)
+
+
 def html_confirmation_email(confirmation_link):
     return render_template("emails/confirm_email.html", confirmation_link=confirmation_link)
+
+
+def html_change_mail_email(confirm_new_email_link):
+    return render_template("emails/confirm_new_email.html", confirm_new_email_link=confirm_new_email_link)
 
 
 def is_email(email):
     return re.match("^.+@.+[.].+", email)
 
 
-def get_mail_from_token(token):
-    return ts.loads(token, salt="email-confirmation-key", max_age=3600)
+def decrypt_token(token, salt):
+    return ts.loads(token, salt=salt, max_age=3600)
