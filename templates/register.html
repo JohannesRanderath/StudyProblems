@@ -12,16 +12,24 @@
     <p>Passwords must contain 8 characters, of which one has to be an uppercase letter, one a lowercase letter and one a number.</p>
     <form action="/register" method="post">
         <div class="form-group">
-            <input class="form-control" autocomplete="off" autofocus name="username" placeholder="Username" type="text" required>
+            <label for="username">
+                <input class="form-control" autocomplete="off" autofocus name="username" placeholder="Username" type="text" required>
+            </label>
         </div>
         <div class="form-group">
-            <input class="form-control" name="email" type="email" placeholder="Email (optional)">
+            <label for="email">
+                <input class="form-control" name="email" type="email" placeholder="Email (optional)">
+            </label>
         </div>
         <div class="form-group">
-            <input class="form-control" autocomplete="off" name="password" placeholder="Password" type="password" required>
+            <label for="password">
+                <input class="form-control" autocomplete="off" name="password" placeholder="Password" type="password" required>
+            </label>
         </div>
         <div class="form-group">
-            <input class="form-control" autocomplete="off" name="confirmation" placeholder="Confirm password" type="password" required>
+            <label for="confirm password">
+                <input class="form-control" autocomplete="off" name="confirmation" placeholder="Confirm password" type="password" required>
+            </label>
         </div>
         <button class="btn btn-primary" type="submit">Register</button>
     </form>

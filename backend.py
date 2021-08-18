@@ -1,4 +1,5 @@
-from flask import render_template, redirect, session, url_for
+from flask import render_template, redirect, session, url_for, current_app
+from flask_mail import Mail, Message
 
 import re
 import sqlite3
@@ -8,6 +9,8 @@ from passlib.context import CryptContext
 from itsdangerous import URLSafeTimedSerializer
 
 ts = URLSafeTimedSerializer("CS50")
+
+mail = Mail(current_app)
 
 # Setting up passlib to hash passwords
 # Using argon2 as hashing algorithm
@@ -91,3 +94,14 @@ def is_email(email):
 
 def decrypt_token(token, salt):
     return ts.loads(token, salt=salt, max_age=3600)
+
+
+def send_email(recipient, subject, html):
+    recipients = [recipient]
+    msg = Message(recipients=recipients, subject=subject, html=html)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(e)
+        return False
+    return True

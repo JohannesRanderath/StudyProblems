@@ -9,15 +9,23 @@
 
     <h3>Change password</h3>
     <form action="/account" method="post">
-        <input name="type" value="change_password" hidden required>
+        <label for="data identifier" hidden>
+            <input name="type" value="change_password" hidden required>
+        </label>
         <div class="form-group">
-            <input class="form-control" autofocus type="password" name="old_password" placeholder="Old password" required>
+            <label for="current password">
+                <input class="form-control" autofocus type="password" name="old_password" placeholder="Old password" required>
+            </label>
         </div>
         <div class="form-group">
-            <input class="form-control" type="password" name="new_password" placeholder="New password" required>
+            <label for="new password">
+                <input class="form-control" type="password" name="new_password" placeholder="New password" required>
+            </label>
         </div>
         <div class="form-group">
-            <input class="form-control" type="password" name="confirmation" placeholder="Confirm password" required>
+            <label for="confirm password">
+                <input class="form-control" type="password" name="confirmation" placeholder="Confirm password" required>
+            </label>
         </div>
         <button class="btn btn-primary" type="submit">Change password</button>
     </form>
@@ -26,9 +34,13 @@
     <br>
     <h3>Change / add email</h3>
     <form action="/account" method="post">
-        <input name="type" value="change_email" hidden required>
+        <label for="data identifier" hidden>
+            <input name="type" value="change_email" hidden required>
+        </label>
         <div class="form-group">
-            <input class="form-control" name="new_email" placeholder="New email" type="text" required>
+            <label for="new email">
+                <input class="form-control" name="new_email" placeholder="New email" type="text" required>
+            </label>
         </div>
         <button class="btn btn-primary" type="submit">Add email</button>
     </form>
