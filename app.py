@@ -1,20 +1,18 @@
-from flask import Flask, render_template, redirect, request, session, flash
+from flask import Flask, render_template, redirect, request, flash
 from flask_session import Session
 
-import sqlite3
-
-from backend import is_logged_in, check_password_requirements, generate_password_hash, is_email, \
-    verify_password, generate_email_confirmation_link, html_confirmation_email, decrypt_token, \
-    html_change_mail_email, generate_change_email_link, html_reset_password_mail, generate_password_reset_link, \
-    send_email
+from session_handling import is_logged_in, current_user, logout_from_session, login_to_session
+from regex import check_password_requirements, is_email
+from security import generate_password_hash, verify_password, decrypt_token, generate_password_reset_link, \
+    generate_change_email_link, generate_email_confirmation_link
+from mail import html_confirmation_email, html_change_mail_email, html_reset_password_mail, send_email
+from database import create_new_user, update_user_hash, update_user_email, update_email_confirmed, get_user_email,\
+    get_username_by_email, close_connection
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
 
 Session(app)
-
-# TODO: export database handling to backend.py, if possible using one instance of database connection
-# TODO: password protect database
 
 
 @app.route('/')
@@ -40,37 +38,30 @@ def account():
             if not confirmation:
                 flash("Please confirm password", "warning")
                 return render_template("account.html")
-            if not verify_password(session["username"], generate_password_hash(old_password)):
+            if not verify_password(current_user(), old_password):
                 flash("Wrong password", "warning")
                 return render_template("account.html")
             if not new_password == confirmation:
                 flash("Passwords do not match", "warning")
                 return render_template("account.html")
-            db_con = sqlite3.connect("database.db")
-            db = db_con.cursor()
-            db.execute("UPDATE users SET hash=? WHERE username=?;",
-                       (generate_password_hash(new_password), session["username"]))
-            db_con.commit()
-            db_con.close()
+            if not update_user_hash(generate_password_hash(new_password), current_user()):
+                flash("An unexpected error occurred. Please try again later", "danger")
+                return render_template("account.html")
             flash("Password changed", "success")
             return render_template("account.html")
         if request.form.get("type") == "change_email":
-            db_con = sqlite3.connect("database.db")
-            db = db_con.cursor()
             new_email = request.form.get("new_email")
             if not new_email:
-                db_con.close()
                 flash("new email required", "warning")
                 return render_template("account.html")
-            old_email = db.execute("SELECT email FROM users WHERE username=?;", (session["username"], )).fetchone()[0]
+            old_email = get_user_email(current_user())
             if not old_email:
-                db.execute("UPDATE users SET email=? WHERE username=?", (new_email, session["username"]))
-                db_con.commit()
-                db_con.close()
+                if not update_user_email(current_user(), new_email):
+                    flash("An unexpected error occurred. Please try again later", "danger")
+                    return render_template("account.html")
                 flash("Email set", "success")
                 return render_template("account.html")
             else:
-                db_con.close()
                 if not send_email(new_email, "Confirm new email",
                                   html_change_mail_email(generate_change_email_link(old_email, new_email))):
                     flash("An error occurred. Please try again later.", "danger")
@@ -84,7 +75,9 @@ def account():
 @app.route("/logout")
 @is_logged_in
 def logout():
-    session.clear()
+    if not logout_from_session():
+        flash("An error occurred, please try again", "danger")
+        return redirect("/")
     flash("You are now logged out", "success")
     return redirect("/")
 
@@ -102,19 +95,18 @@ def login():
         if not verify_password(username, request.form.get("password")):
             flash("Wrong username or password", "danger")
             return render_template("login.html")
-        session["username"] = username
+        if not login_to_session(username):
+            flash("An error occurred, please try again.", "danger")
+            return render_template("login.html")
         flash("Login successful", "success")
         return redirect("/")
     else:
-        return render_template("login.html", messages=[])
+        return render_template("login.html")
 
 
 @app.route("/register", methods=["POST", "GET"])
 def register():
     if request.method == "POST":
-        db_connection = sqlite3.connect("database.db")
-        db = db_connection.cursor()
-
         username = request.form.get("username")
         password = request.form.get("password")
         email = request.form.get("email")
@@ -127,7 +119,7 @@ def register():
         if not request.form.get("confirmation"):
             flash("Please confirm password", "warning")
             return render_template("register.html")
-        if db.execute("SELECT username FROM users WHERE username=?;", (username,)).fetchone():
+        if get_user_email(username):
             flash("Username already exists", "danger")
             return render_template("register.html")
         if not password == request.form.get("confirmation"):
@@ -137,21 +129,23 @@ def register():
             flash("Password does not meet requirements")
             return render_template("register.html")
 
-        db.execute("INSERT INTO users (username, hash) VALUES (?,?)", (username, generate_password_hash(password)))
+        if not create_new_user(username, password):
+            flash("An unexpected error occurred. Please try again later", "danger")
+            return render_template("register.html")
         if email and is_email(email):
-            db.execute("UPDATE users SET email=?, email_confirmed=? WHERE username=?;", (email, 0, username))
-            db_connection.commit()
-            db_connection.close()
+            update_user_email(username, email)
             if not send_email(email, "Please confirm your email",
                               html_confirmation_email(generate_email_confirmation_link(email))):
                 flash("An error occurred. Please try again later.", "danger")
                 return redirect("/")
 
-        session["username"] = username
+        if not login_to_session(username):
+            flash("An error occurred, please try again", "danger")
+            return render_template("register.html")
         flash("You are successfully registered", "success")
         return redirect("/login")
     else:
-        return render_template("register.html", messages=[])
+        return render_template("register.html")
 
 
 @app.route("/confirm/<token>")
@@ -161,12 +155,9 @@ def confirm(token):
     except Exception as e:
         print(e)
         return render_template("bad_confirmation_link.html")
-    db_con = sqlite3.connect("database.db")
-    db = db_con.cursor()
-    if db.execute("SELECT email FROM users WHERE email=?;", (email, )):
-        db.execute("UPDATE users SET email_confirmed=1 WHERE email=?;", (email, ))
-    db_con.commit()
-    db_con.close()
+    if not update_email_confirmed(email):
+        flash("An error occurred, please try again", "danger")
+        return render_template("register.html")
     flash("Email confirmed. Thank you", "success")
     return redirect("/")
 
@@ -177,11 +168,11 @@ def change_email(token):
         data = decrypt_token(token, "change-email-key")
         old_email = data["old_email"]
         new_email = data["new_email"]
-        db_con = sqlite3.connect("database.db")
-        db = db_con.cursor()
-        db.execute("UPDATE users SET email=? WHERE email=?;", (new_email, old_email))
-        db_con.commit()
-        db_con.close()
+
+        if not update_user_email(get_username_by_email(old_email), new_email):
+            flash("An error occurred, please try again", "danger")
+            return redirect("/")
+
         flash("Email updated!", "success")
         return redirect("/")
     except Exception as e:
@@ -210,11 +201,11 @@ def reset_password(token):
         if not check_password_requirements(password):
             flash("Password does not meet criteria", "warning")
             return render_template("reset_password.html")
-        db_con = sqlite3.connect("database.db")
-        db = db_con.cursor()
-        db.execute("UPDATE users SET hash=? WHERE username=?;", (generate_password_hash(password), username))
-        db_con.commit()
-        db_con.close()
+
+        if not update_user_hash(generate_password_hash(password), username):
+            flash("An error occurred, please try again", "danger")
+            return render_template("reset_password.html")
+
         flash("Password reset successfully", "success")
         return redirect("/login")
     else:
@@ -233,13 +224,10 @@ def request_password_reset():
         if not username:
             flash("Username required", "warning")
             return render_template("request_password_reset.html")
-        db_con = sqlite3.connect("database.db")
-        db = db_con.cursor()
-        if not db.execute("SELECT email FROM users WHERE username=?;", (username, )):
-            db_con.close()
+        if not get_user_email(username):
             flash("Username doesn't exist or no email is associated with it.", "danger")
             return render_template("request_password_reset.html")
-        email = db.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
+        email = get_user_email(username)
         if not send_email(email, "Reset password", html_reset_password_mail(generate_password_reset_link(username))):
             flash("An error occurred. Please try again later.", "danger")
             return redirect("/")
@@ -247,6 +235,11 @@ def request_password_reset():
         return render_template("request_password_reset.html")
     else:
         return render_template("request_password_reset.html")
+
+
+@app.teardown_appcontext
+def close_db(exception):
+    close_connection(exception)
 
 
 if __name__ == '__main__':

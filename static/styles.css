@@ -1,5 +1,5 @@
 body {
-    padding-top: 70px;
+
 }
 
 img {
@@ -9,6 +9,7 @@ img {
 .main {
     text-align: center;
     overflow-x: auto;
+    padding-top: 70px;
 }
 
 .form-control {
@@ -26,4 +27,9 @@ img {
 
 .form-group {
     margin: 1rem;
+}
+
+
+.alert {
+    padding-top: 70px;
 }
