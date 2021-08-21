@@ -72,6 +72,12 @@ def account():
         return render_template("account.html")
 
 
+@app.route("/parse_calendar", methods=["POST", "GET"])
+@is_logged_in
+def parse_calendar():
+    return render_template("parse_calendar.html")
+
+
 @app.route("/logout")
 @is_logged_in
 def logout():
@@ -129,7 +135,7 @@ def register():
             flash("Password does not meet requirements")
             return render_template("register.html")
 
-        if not create_new_user(username, password):
+        if not create_new_user(username, generate_password_hash(password)):
             flash("An unexpected error occurred. Please try again later", "danger")
             return render_template("register.html")
         if email and is_email(email):

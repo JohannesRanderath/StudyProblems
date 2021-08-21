@@ -22,7 +22,7 @@ def create_new_user(username, password):
         db = get_db()
         cur = db.cursor()
         cur.execute("INSERT INTO users (username, hash, email_confirmed) VALUES (?, ?, 0)",
-                    (username, generate_password_hash(password)))
+                    (username, password))
         db.commit()
         return True
     except Exception as e:
