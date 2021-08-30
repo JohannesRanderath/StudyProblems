@@ -39,34 +39,37 @@ def verify_password(username: str, password: str):
     return True
 
 
-def generate_email_confirmation_link(email: str):
+def generate_email_confirmation_link(email: str, salt: str):
     """
     Generate link to send in email to confirm email address
     :param email: email to verify
+    :param salt: function specific salt from app.config
     :return: link to confirm email
     """
-    token = ts.dumps(email, salt="email-confirmation-key")
+    token = ts.dumps(email, salt=salt)
     return url_for('confirm', token=token, _external=True)
 
 
-def generate_change_email_link(old_email: str, new_email: str):
+def generate_change_email_link(old_email: str, new_email: str, salt: str):
     """
     Generate link to send in email to confirm changed email address
     :param old_email: email saved in database associated with account
     :param new_email: email to verify
+    :param salt: function specific salt from app.config
     :return: link to confirm changed email
     """
-    token = ts.dumps({"old_email": old_email, "new_email": new_email}, salt="change-email-key")
+    token = ts.dumps({"old_email": old_email, "new_email": new_email}, salt=salt)
     return url_for("change_email", token=token, _external=True)
 
 
-def generate_password_reset_link(username: str):
+def generate_password_reset_link(username: str, salt: str):
     """
     Generate link to send in email to reset password
     :param username: username of user to reset password
+    :param salt: function specific salt from app.config
     :return: link to reset password
     """
-    token = ts.dumps(username, salt="reset-password-key")
+    token = ts.dumps(username, salt=salt)
     return url_for("reset_password", token=token, _external=True)
 
 

@@ -316,7 +316,7 @@ def answer_question():
         if not question_id:
             flash("Illegal parameters", "danger")
             return redirect("/to_answer")
-        question = get_question(question_id)
+        question = get_question(int(question_id))
         if not question:
             flash("Question not found", "danger")
             return redirect("/to_answer")
@@ -404,7 +404,8 @@ def account():
                     flash("An unexpected error occurred. Please try again later", "danger")
                     return render_my_template("account.html")
                 if not send_email(new_email, "Please confirm your email",
-                                  html_confirmation_email(generate_email_confirmation_link(new_email))):
+                                  html_confirmation_email(generate_email_confirmation_link(
+                                      new_email, app.config["EMAIL_CONFIRMATION_SALT"]))):
                     flash("An error occurred. Please try again later.", "danger")
                     return redirect("/")
                 flash("Email set", "success")
@@ -413,7 +414,8 @@ def account():
             # didn't confirm the email
             else:
                 if not send_email(new_email, "Confirm new email",
-                                  html_change_mail_email(generate_change_email_link(old_email, new_email))):
+                                  html_change_mail_email(generate_change_email_link(old_email, new_email,
+                                                                                    app.config["CHANGE_EMAIL_SALT"]))):
                     flash("An error occurred. Please try again later.", "danger")
                     return redirect("/")
                 flash("Confirmation link sent", "success")
@@ -529,7 +531,8 @@ def register():
         if email and is_email(email):
             update_user_email(username, email)
             if not send_email(email, "Please confirm your email",
-                              html_confirmation_email(generate_email_confirmation_link(email))):
+                              html_confirmation_email(generate_email_confirmation_link(
+                                  email, app.config["EMAIL_CONFIRMATION_SALT"]))):
                 flash("An error occurred. Please try again later.", "danger")
                 return redirect("/register")
         # Log in automatically
@@ -552,7 +555,7 @@ def confirm(token):
     :return: bad_confirmation_link.html when unsuccessful
     """
     try:
-        email = decrypt_token(token, "email-confirmation-key")
+        email = decrypt_token(token, app.config["EMAIL_CONFIRMATION_SALT"])
     except Exception as e:
         print(e)
         return render_my_template("bad_confirmation_link.html")
@@ -573,7 +576,7 @@ def change_email(token):
     :return: bad_change_email_link.html when unsuccessful
     """
     try:
-        data = decrypt_token(token, "change-email-key")
+        data = decrypt_token(token, app.config["CHANGE_EMAIL_SALT"])
         old_email = data["old_email"]
         new_email = data["new_email"]
 
@@ -626,7 +629,7 @@ def reset_password(token):
         return redirect("/login")
     else:
         try:
-            username = decrypt_token(token, "reset-password-key")
+            username = decrypt_token(token, app.config["RESET_PASSWORD_SALT"])
             return render_my_template("reset_password.html", username=username)
         except Exception as e:
             print(e)
@@ -646,7 +649,8 @@ def request_password_reset():
             flash("Username required", "warning")
             return render_my_template("request_password_reset.html")
         if not send_user_email(username, "Reset password",
-                               html_reset_password_mail(generate_password_reset_link(username))):
+                               html_reset_password_mail(generate_password_reset_link(
+                                   username, app.config["RESET_PASSWORD_SALT"]))):
             flash("An error occurred. Probably the username doesn't exist or no email is associated with it.", "danger")
             return render_my_template("request_password_reset.html")
         flash("Reset link sent", "success")
