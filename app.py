@@ -22,6 +22,8 @@ Session(app)
 
 # TODO: Show messages and questions newest to oldest
 # TODO: Footer should be at the bottom of the page when its longer than the screen
+# TODO: Change salts
+# TODO: BUG: When asking a question without selected user
 
 
 def render_my_template(template: str, **kwargs):

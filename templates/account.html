@@ -1,3 +1,4 @@
+<!-- view for /account -->
 {% extends "layout/layout.html" %}
 
 
@@ -8,6 +9,7 @@
 {% block main %}
     <p>You are logged in as {{ username }}.</p>
 
+    <!-- First function: Change password -->
     <h3>Change password</h3>
     <form action="/account" method="post">
         <label for="data identifier" hidden>
@@ -33,6 +35,7 @@
     <br>
     <hr>
     <br>
+    <!-- Second function: Change email address -->
     <h3>Change / add email</h3>
     <form action="/account" method="post">
         <label for="data identifier" hidden>
@@ -48,6 +51,7 @@
     <br>
     <hr>
     <br>
+    <!-- Third function: Change email preferences -->
     <h3>Email preferences</h3>
     <p>Receive emails when...</p>
     <form action="/account" method="post">

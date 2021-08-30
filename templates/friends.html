@@ -1,3 +1,4 @@
+<!-- View for /manage_friends -->
 {% extends "layout/layout.html" %}
 
 
@@ -5,7 +6,7 @@
 
 {% block script %}
     <script>
-
+        // Implement AJAX showing usernames searched to send friend request
         document.addEventListener('DOMContentLoaded', function () {
             let add_username = document.getElementById('add_username');
             let find_username = document.getElementById('find_username');
@@ -52,6 +53,7 @@
 {% block main %}
 
     <h1>Manage friends</h1>
+    <!-- First functionality: Add friend -->
     <h3>Add friend</h3>
     <form id="add_friend">
         <div class="form-group">
@@ -69,7 +71,7 @@
     <br>
     <hr>
     <br>
-
+    <!-- Second functionality: Overview of friends, functionality to delete friends and ask questions -->
     <h3>Your friends</h3>
     <p>You have {% if numOfFriends > 0 %}{{ numOfFriends }} friends.{% else %} no friends yet.{% endif %}</p>
     {% if numOfFriends > 0 %}
