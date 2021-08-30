@@ -1,0 +1,54 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Questions to me {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>Questions someone asked you</h3>
+    {% if not answered_questions and not unanswered_questions %}
+        <p>No questions yet.</p>
+    {% endif %}
+    {% if unanswered_questions %}
+        <h4>Unanswered questions</h4>
+        <table class="table table-striped">
+        <tr>
+            <th>Question from</th>
+            <th>Question</th>
+        </tr>
+        {% for question in unanswered_questions %}
+            <tr>
+                <td>{{ question["sender"] }}</td>
+                <td>{{ question["question"] }}</td>
+                <td>
+                    <form action="/answer_question" method="get">
+                        <label>
+                            <input type="text" name="id" value="{{ question["id"] }}" hidden required>
+                        </label>
+                        <button type="submit" class="btn btn-primary">Answer</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+        {% endif %}
+        {% if answered_questions %}
+        <h4>Answered questions</h4>
+        <table class="table table-striped">
+        <tr>
+            <th>Question from</th>
+            <th>Question</th>
+            <th>Answer</th>
+        </tr>
+        {% for question in answered_questions %}
+            <tr>
+                <td>{{ question["sender"] }}</td>
+                <td>{{ question["question"] }}</td>
+                <td>{{ question["answer"] }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}

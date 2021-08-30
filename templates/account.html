@@ -6,6 +6,7 @@
 {% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
 
 {% block main %}
+    <p>You are logged in as {{ username }}.</p>
 
     <h3>Change password</h3>
     <form action="/account" method="post">

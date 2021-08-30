@@ -1,0 +1,34 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Ask question {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>Ask question</h3>
+    {% if not friends %}
+        <p>First, add a <a href="/manage_friends">friend</a>.</p>
+    {% else %}
+        <form action="/ask_question" method="post">
+            <div class="form-group">
+                <label>
+                    <select name="friend" required>
+                        <option disabled {% if not ask_friend %}selected{% endif %}>Friend</option>
+                        {% for friend in friends %}
+                            <option name="{{ friend }}" {% if ask_friend == friend %}selected{% endif %}>{{ friend }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input class="form-control" type="text" name="question" placeholder="Question" autofocus autocomplete="off" required>
+                </label>
+            </div>
+            <button class="btn btn-primary" type="submit">Ask</button>
+        </form>
+    {% endif %}
+
+{% endblock %}

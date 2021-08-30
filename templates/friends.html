@@ -1,0 +1,107 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Friends {% endblock %}
+
+{% block script %}
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            let add_username = document.getElementById('add_username');
+            let find_username = document.getElementById('find_username');
+            add_username.addEventListener('keyup', function () {
+                if(add_username.value === '')
+                {
+                    find_username.innerHTML = '';
+                }
+                else
+                {
+                    let html = '';
+                    let call = '/get_usernames_list?startswith=' + add_username.value;
+                    fetch(call)
+                    .then(result => result.json())
+                    .then(function (usernames) {
+                        if (usernames.length === 0) {
+                            find_username.innerHTML = '<tr> <td> No user found. </td> </tr>';
+                        } else {
+                            for (let i = 0; i < usernames.length; i++) {
+                                html += `<tr>
+                                            <td>${usernames[i]}</td>
+                                            <td>
+                                                <form method="post" action="/add_friend">
+                                                    <label>
+                                                        <input type="text" value="${usernames[i]}" name="username" hidden>
+                                                    </label>
+                                                    <button class="btn btn-primary" type="submit">Add friend</button>
+                                                </form>
+                                            </td>
+                                        </tr>`;
+                            }
+                            find_username.innerHTML = html;
+                        }
+                    });
+                }
+            });
+        });
+
+    </script>
+{% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h1>Manage friends</h1>
+    <h3>Add friend</h3>
+    <form id="add_friend">
+        <div class="form-group">
+            <label for="add_username">
+                <input type="text" autofocus autocomplete="off" class="form-control" id="add_username" name="add_username" placeholder="Username">
+            </label>
+        </div>
+    </form>
+    <table class="table table-striped" >
+        <tbody id="find_username">
+            <!-- AJAX result of database lookup ends up here -->
+        </tbody>
+    </table>
+
+    <br>
+    <hr>
+    <br>
+
+    <h3>Your friends</h3>
+    <p>You have {% if numOfFriends > 0 %}{{ numOfFriends }} friends.{% else %} no friends yet.{% endif %}</p>
+    {% if numOfFriends > 0 %}
+        <table class="table table-striped">
+            <tbody>
+                <th>Username</th>
+
+                {% for friend in friends %}
+                    <tr>
+                        <td>{{ friend }}</td>
+                        <td>
+                            <form action="/ask_question" method="get">
+                                <label>
+                                    <input type="text" name="friend" value="{{ friend }}" hidden required readonly>
+                                </label>
+                                <button type="submit" class="btn btn-primary">Ask question</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="/remove_friend" method="post">
+                                <label>
+                                    <input type="text" name="username" value="{{ friend }}" hidden required readonly>
+                                </label>
+                                <button type="submit" class="btn btn-danger">Remove friend</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    {% endif %}
+
+
+{% endblock %}

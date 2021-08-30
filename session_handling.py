@@ -16,7 +16,10 @@ def is_logged_in(route_function):
 
 
 def current_user():
-    return session["username"]
+    if "username" in session.keys():
+        return session["username"]
+    else:
+        return None
 
 
 def logout_from_session():

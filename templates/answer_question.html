@@ -1,0 +1,22 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} Answer {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>Answer a question</h3>
+    <p>{{ question["sender"] }} asked: <i>{{ question["question"] }}</i></p>
+    <form action="/answer_question" method="post">
+        <label>
+            <input type="text" name="id" value="{{ question["id"] }}" hidden readonly required>
+        </label>
+        <label>
+            <input type="text" name="answer" autofocus autocomplete="off" placeholder="Question" required>
+        </label>
+        <button type="submit" class="btn btn-primary">Answer</button>
+    </form>
+
+{% endblock %}

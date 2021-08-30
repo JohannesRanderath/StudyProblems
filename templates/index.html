@@ -7,6 +7,97 @@
 
 {% block main %}
 
+    <h1>Welcome to StudyProblems</h1>
+    <p>You have {% if num_of_messages > 1 %} {{ num_of_messages }} messages.
+        {% elif num_of_messages == 1 %} one message. {% else %} no messages. {% endif %}</p>
+    {% if num_of_messages > 0 %}
+        <table class="table table-striped">
+            <tbody>
+                {% for message in messages %}
+                    <tr>
+                        {% if message["type"] == "friend_request" %}
+                            <td class="message_text">{{ message["sender"] }} sent you a friend request.</td>
+                            <td>
+                                <form action="/accept_friend_request" method="post">
+                                    <label>
+                                        <input name="username" value="{{ message["sender"] }}" readonly required hidden>
+                                    </label>
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-success">Accept</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/decline_friend_request" method="post">
+                                    <label>
+                                        <input name="username" value="{{ message["sender"] }}" readonly required hidden>
+                                    </label>
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-danger">Decline</button>
+                                </form>
+                            </td>
 
+                        {% elif message["type"] == "accepted_friend_request" %}
+                            <td class="message_text">{{ message["sender"] }} accepted your friend request.</td>
+                            <td>
+                                <form action="/discard_message" method="post">
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Okay</button>
+                                </form>
+                            </td>
+
+                        {% elif message["type"] == "declined_friend_request" %}
+                            <td class="message_text">{{ message["sender"] }} declined your friend request.</td>
+                            <td>
+                                <form action="/discard_message" method="post">
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Okay</button>
+                                </form>
+                            </td>
+
+                        {% elif message["type"] == "removed_friend" %}
+                            <td class="message_text">{{ message["sender"] }} removed you as a friend.</td>
+                            <td>
+                                <form action="/discard_message" method="post">
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Okay</button>
+                                </form>
+                            </td>
+
+                        {% elif message["type"] == "asked_question" %}
+                            <td class="message_text">{{ message["sender"] }} asked you a question.</td>
+                            <td>
+                                <form action="/message_asked_question" method="post">
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Show questions</button>
+                                </form>
+                            </td>
+                        {% elif message["type"] == "answered_question" %}
+                            <td class="message_text">{{ message["sender"] }} answered your question.</td>
+                            <td>
+                                <form action="/message_answered_question" method="post">
+                                    <label>
+                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                    </label>
+                                    <button type="submit" class="btn btn-primary">Show questions</button>
+                                </form>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 
 {% endblock %}

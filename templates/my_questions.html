@@ -1,0 +1,30 @@
+{% extends "layout/layout.html" %}
+
+
+{% block title %} My questions {% endblock %}
+
+{% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
+
+{% block main %}
+
+    <h3>Questions you asked</h3>
+    {% if questions %}
+        <table class="table table-striped">
+        <tr>
+            <th>Question to</th>
+            <th>Question</th>
+            <th>Answer</th>
+        </tr>
+        {% for question in questions %}
+            <tr>
+                <td>{{ question["recipient"] }}</td>
+                <td>{{ question["question"] }}</td>
+                <td>{% if question["answer"] %}{{ question["answer"] }}{% else %}<i>Not answered yet</i>{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </table>
+
+    {% else %}
+        <p>No questions yet.</p>
+    {% endif %}
+{% endblock %}
