@@ -20,10 +20,6 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: Change salts
-# TODO: BUG: When asking a question without selected user
-
-
 def render_my_template(template: str, **kwargs):
     """
     For the badges indicating the number of messages and questions to update with every refresh, we need to calculate
