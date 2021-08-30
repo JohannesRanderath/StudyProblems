@@ -23,7 +23,9 @@
         <title>StudyProblems: {% block title %} {% endblock %}</title>
     </head>
 
-    <body>
+    <!-- body classes to make footer stay at the bottom of the display if the page is smaller than the window and
+         else at the bottom of the page. -->
+    <body class="d-flex flex-column min-vh-100">
 
         <header>
 
@@ -63,7 +65,7 @@
         </div>
 
         <!-- footer with copyright -->
-        <footer class="footer">
+        <footer class="footer mt-auto">
             <div class="container">
                 <br>
                 <span class="text-muted">

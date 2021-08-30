@@ -20,8 +20,6 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: Show messages and questions newest to oldest
-# TODO: Footer should be at the bottom of the page when its longer than the screen
 # TODO: Change salts
 # TODO: BUG: When asking a question without selected user
 
@@ -78,6 +76,8 @@ def home():
     :return: index.html
     """
     messages = get_user_messages(current_user())
+    # Display messages oldest to newest
+    messages = list(reversed(messages))
     return render_my_template("index.html", messages=messages)
 
 
@@ -89,6 +89,9 @@ def my_questions():
     :return: my_questions.html
     """
     questions = get_questions_from_user(current_user())
+    # Display questions oldest to newest
+    if questions:
+        questions = list(reversed(questions))
     return render_my_template("my_questions.html",  questions=questions)
 
 
@@ -102,8 +105,11 @@ def to_answer():
     :return: to_answer.html
     """
     questions = get_questions_for_user(current_user())
+    # Display in oldest to newest
+    if questions:
+        questions = list(reversed(questions))
     unanswered_questions = [question for question in questions if not question["answer"]]
-    answered_questions = [question for question in questions if question["answer"]]
+    answered_questions = [question for question in questions if question not in unanswered_questions]
     return render_my_template("to_answer.html", unanswered_questions=unanswered_questions,
                               answered_questions=answered_questions)
 
@@ -284,7 +290,7 @@ def answer_question():
     View to answer question the user was assigned to by a friend.
     Adds answer to database and notifies friend
     :return: answer_question.html from get
-    :return: home (/) from post
+    :return: redirect to /to_answer from post
     """
     if request.method == "POST":
         question_id = request.form.get("id")
@@ -292,31 +298,31 @@ def answer_question():
         answer = request.form.get("answer")
         if not question_id or not answer:
             flash("Please supply all required parameters", "danger")
-            return redirect("/")
+            return redirect("/to_answer")
         if not question_exists(question_id) or not question:
             flash("Question not found", "danger")
-            return redirect("/")
+            return redirect("/to_answer")
         if not add_answer(question_id, answer):
             flash("An error occurred, please try again.", "danger")
-            redirect("/")
+            redirect("/to_answer")
         add_message(current_user(), question["sender"], "answered_question")
         # send email if user didn't opt out and confirmed their email.
         if "question_answered" not in get_email_preferences_not(question["sender"]):
             send_user_email(question["sender"], "Question answered", html_question_answered(current_user()))
         flash("Question answered", "success")
-        return redirect("/")
+        return redirect("/to_answer")
     else:
         question_id = request.args.get("id")
         if not question_id:
             flash("Illegal parameters", "danger")
-            return redirect("/")
+            return redirect("/to_answer")
         question = get_question(question_id)
         if not question:
             flash("Question not found", "danger")
-            return redirect("/")
+            return redirect("/to_answer")
         if question["answer"]:
             flash("Question already answered.", "warning")
-            return redirect("/")
+            return redirect("/to_answer")
         return render_my_template("answer_question.html", question=question)
 
 
