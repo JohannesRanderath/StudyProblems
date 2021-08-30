@@ -2,7 +2,15 @@ from flask import g, current_app
 import sqlite3
 
 
+# do all database handling in this separate .py
+
+
 def get_db():
+    """
+    Setup database connection if it wasn't established yet and return it.
+    If there is already an active db connection, return that
+    :return: An active sqlite3 database connection
+    """
     db = getattr(g, '_database', None)
     if not db:
         db = g._database = sqlite3.connect(current_app.config["DB_NAME"])
@@ -10,6 +18,11 @@ def get_db():
 
 
 def close_connection(exception):
+    """
+    Close database when the app is closed.
+    :param exception: from app.teardown_appcontext
+    :return:
+    """
     if exception:
         print(exception)
     db = getattr(g, '_database', None)
@@ -17,12 +30,19 @@ def close_connection(exception):
         db.close()
 
 
-def create_new_user(username, password):
+def create_new_user(username: str, password_hash: str):
+    """
+    Add user account in database
+    :param username: New username. Has to be unique
+    :param password_hash: hashed password, clear text password meets requirements, hash is stored
+    :return: True if successful
+    :return: False if an Excption was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
         cur.execute("INSERT INTO users (username, hash, email_confirmed) VALUES (?, ?, 0)",
-                    (username, password))
+                    (username, password_hash))
         db.commit()
         return True
     except Exception as e:
@@ -30,7 +50,14 @@ def create_new_user(username, password):
         return False
 
 
-def update_user_hash(new_hash, username):
+def update_user_hash(new_hash: str, username: str):
+    """
+    Change user password.
+    :param new_hash: hashed password to substitute old hash in table. Clear password meets requirements.
+    :param username: username, account has to exist.
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -43,7 +70,14 @@ def update_user_hash(new_hash, username):
         return False
 
 
-def update_user_email(username, new_email):
+def update_user_email(username: str, new_email: str):
+    """
+    Update email associated with user account
+    :param username: username, must exist
+    :param new_email: email to substitute email associated with account. Should comply with email requirements
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -55,13 +89,20 @@ def update_user_email(username, new_email):
         return False
 
 
-def update_email_confirmed(email):
+def update_email_confirmed(email: str):
+    """
+    Save to database that user confirmed their email.
+    :param email: email associated with an account in the database
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
         if cur.execute("SELECT email FROM users WHERE email=?;", (email, )):
             cur.execute("UPDATE users SET email_confirmed=1 WHERE email=?;", (email, ))
             db.commit()
+            return True
         else:
             return False
     except Exception as e:
@@ -69,7 +110,13 @@ def update_email_confirmed(email):
         return False
 
 
-def get_user_email(username):
+def get_user_email(username:str):
+    """
+    Get email if one is associated with the given account
+    :param username: username, must exist in database
+    :return: email associated with username if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -82,7 +129,13 @@ def get_user_email(username):
         return False
 
 
-def get_user_hash(username):
+def get_user_hash(username: str):
+    """
+    get hashed password to given account
+    :param username: username, must exist in database
+    :return: hashed password of given user
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -92,7 +145,13 @@ def get_user_hash(username):
         return False
 
 
-def get_username_by_email(email):
+def get_username_by_email(email: str):
+    """
+    Get username to given email, if it exists in database. Theoretically there
+    could be more than one account associated with a given email. In this case return the first one
+    :param email: email to get username associated with it if it exists
+    :return: first username found, that is associated with the given email, None if not found
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -102,7 +161,12 @@ def get_username_by_email(email):
         return False
 
 
-def get_usernames_starting_with(string):
+def get_usernames_starting_with(string: str):
+    """
+    Get all usernames in database starting with given substring.
+    :param string: Substring the username must start with.
+    :return: All usernames starting with <string>, an empty list if no match
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -114,7 +178,14 @@ def get_usernames_starting_with(string):
         return []
 
 
-def user_exists(username):
+def user_exists(username: str):
+    """
+    Check if username has a match in database.
+    :param username:
+    :return: True if username exists in database
+    :return: False if no match
+    :return: False if an Exception was raised.
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -125,7 +196,14 @@ def user_exists(username):
         return False
 
 
-def question_exists(question_id):
+def question_exists(question_id: int):
+    """
+    Check if a question with the given id exists in database
+    :param question_id: id to look up
+    :return: True if question exists
+    :return: False if question does not exist
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -136,7 +214,14 @@ def question_exists(question_id):
         return False
 
 
-def add_friend_request(user1, user2):
+def add_friend_request(user1: str, user2: str):
+    """
+    Add unconfirmed friendship to friends table in database
+    :param user1: username of user sending the request
+    :param user2: username of user receiving the request
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -150,13 +235,20 @@ def add_friend_request(user1, user2):
         return False
 
 
-def add_message(sender, recipient, message_type):
+def add_message(sender: str, recipient: str, message_type: str):
+    """
+    Add message to messages table. Messages entries have a sender, a recipient and a type.
+    :param sender: username of user invoking function
+    :param recipient: username of user the message should be displayed to
+    :param message_type: Action provoking message
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
         sender_id = cur.execute("SELECT id FROM users WHERE username=?;", (sender, )).fetchone()[0]
         recipient_id = cur.execute("SELECT id FROM users WHERE username=?;", (recipient,)).fetchone()[0]
-        print(sender_id)
         if not sender_id or not recipient_id:
             print("In db.add_message: User not found")
             return False
@@ -169,7 +261,13 @@ def add_message(sender, recipient, message_type):
         return False
 
 
-def get_user_messages(username):
+def get_user_messages(username: str):
+    """
+    Get messages with user with given username as recipient.
+    :param username: username of user of which to which the messages are sent
+    :return: list of messages if successful
+    :return: An empty list if an Exception was raised.
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -187,7 +285,14 @@ def get_user_messages(username):
         return []
 
 
-def confirm_friend(user1, user2):
+def confirm_friend(user1: str, user2: str):
+    """
+    Update table to confirm friendship.
+    :param user1: username of user who sent friend request
+    :param user2: username of user who received friend request
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -201,7 +306,15 @@ def confirm_friend(user1, user2):
         return False
 
 
-def exists_friend_or_request(user1, user2):
+def exists_friend_or_request(user1: str, user2: str):
+    """
+    Check if a confirmed or unconfirmed friendship exists in database
+    :param user1: username of one of the users the friendship should exist between
+    :param user2: username of the other of the users the friendship should exist between
+    :return: True if a confirmed or unconfirmed friendship exists
+    :return: False if no friendship exists
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -217,7 +330,13 @@ def exists_friend_or_request(user1, user2):
         return False
 
 
-def delete_message(message_id):
+def delete_message(message_id: int):
+    """
+    Delete row from messages table with given id
+    :param message_id: id of message that should be deleted
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -229,7 +348,13 @@ def delete_message(message_id):
         return False
 
 
-def delete_all_messages_asked_question(username):
+def delete_all_messages_asked_question(username: str):
+    """
+    Delete all messages notifying that someone asked the user a new question
+    :param username: username of user to whom the messages, that should be deleted, are
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -242,7 +367,13 @@ def delete_all_messages_asked_question(username):
         return False
 
 
-def delete_all_messages_answered_question(username):
+def delete_all_messages_answered_question(username: str):
+    """
+    Delete all messages notifying that someone answered a question the user asked
+    :param username: username of user to whom the messages, that should be deleted, are
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -255,7 +386,13 @@ def delete_all_messages_answered_question(username):
         return False
 
 
-def get_friends(username):
+def get_friends(username: str):
+    """
+    Get all confirmed friends of the given user
+    :param username: username whose friends are to be returned
+    :return: list of confirmed friends of a given user if successful
+    :return: An empty list if an Exception was raised or no friends where found
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -270,7 +407,14 @@ def get_friends(username):
         return []
 
 
-def delete_friends_from_db(user1, user2):
+def delete_friends_from_db(user1: str, user2: str):
+    """
+    Delete friendship from database
+    :param user1: One of the users between which the friendship is
+    :param user2: The other one of the users between which the friendship is
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -285,7 +429,13 @@ def delete_friends_from_db(user1, user2):
         return False
 
 
-def get_questions_from_user(username):
+def get_questions_from_user(username: str):
+    """
+    Get questions the user with given username asked
+    :param username: username of user who asked the question
+    :return: list of questions if successful
+    :return: An empty list if an Exception was raised or no question was found
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -301,7 +451,13 @@ def get_questions_from_user(username):
         return []
 
 
-def get_questions_for_user(username):
+def get_questions_for_user(username: str):
+    """
+    Get questions the user with given username WAS asked
+    :param username: username of user who was assigned to the question
+    :return: list of questions if successful
+    :return: An empty list if an Exception was raised or no question was found
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -317,7 +473,15 @@ def get_questions_for_user(username):
         return []
 
 
-def add_question(sender, recipient, question):
+def add_question(sender: str, recipient: str, question: str):
+    """
+    Add new question from given sender to given recipient with given text to database
+    :param sender: username of user who asked the question
+    :param recipient: username of user who was assigned to the question
+    :param question: text of the question
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -332,7 +496,13 @@ def add_question(sender, recipient, question):
         return False
 
 
-def get_question(question_id):
+def get_question(question_id: int):
+    """
+    Get question row of question with given id.
+    :param question_id: id of question to be returned
+    :return: id, sender, recipient, text and answer to question with given id
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -345,7 +515,14 @@ def get_question(question_id):
         return False
 
 
-def add_answer(question_id, answer):
+def add_answer(question_id: int, answer: str):
+    """
+    Update answer of question with given id
+    :param question_id: id of question the answer should be updated of
+    :param answer: Answer to question with given id
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -357,7 +534,13 @@ def add_answer(question_id, answer):
         return ""
 
 
-def get_email_preferences_not(username):
+def get_email_preferences_not(username: str):
+    """
+    Get opt out preferences for email notification of user with given username
+    :param username: username of user with to get opt out preferences
+    :return: list of events the users does not want to receive notifications for if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
@@ -369,7 +552,14 @@ def get_email_preferences_not(username):
         return False
 
 
-def update_email_preferences(username, email_preferences_not):
+def update_email_preferences(username: str, email_preferences_not: list):
+    """
+    Update opt out email preferences
+    :param username: username of user to update opt out preferences for
+    :param email_preferences_not: list of events the user does not want to get notifications for
+    :return: True if successful
+    :return: False if an Exception was raised
+    """
     try:
         db = get_db()
         cur = db.cursor()
