@@ -20,6 +20,11 @@ app.config.from_object("config.Config")
 Session(app)
 
 
+# TODO: Let sessions timeout
+# TODO: Project video
+# TODO: Remove email password from config before uploading
+
+
 def render_my_template(template: str, **kwargs):
     """
     For the badges indicating the number of messages and questions to update with every refresh, we need to calculate
