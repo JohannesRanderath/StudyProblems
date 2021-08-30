@@ -20,9 +20,22 @@ app.config.from_object("config.Config")
 Session(app)
 
 
+# TODO: Show messages and questions newest to oldest
+# TODO: Footer should be at the bottom of the page when its longer than the screen
+
+
 def render_my_template(template: str, **kwargs):
+    """
+    For the badges indicating the number of messages and questions to update with every refresh, we need to calculate
+    them every time we render a template. This function does these calculations and passes them as parameters to the
+    desired template.
+    :param template: html template the route function wants to render
+    :param kwargs: parameters given by the route function
+    :return: rendered template from flask.render_template with all required parameters
+    """
     user = current_user()
     if user:
+        # If the user is logged in, we can calculate the values by getting the values from the database
         num_of_messages = len(get_user_messages(user))
         questions_to_me = get_questions_for_user(user)
         num_of_questions_to_me = len(questions_to_me)
@@ -33,6 +46,7 @@ def render_my_template(template: str, **kwargs):
         num_of_unanswered_questions_from_me = len([question for question in questions_from_me
                                                    if not question["answer"]])
     else:
+        # If no user is logged in, we don't need the values
         num_of_messages = None
         num_of_questions_to_me = None
         num_of_unanswered_questions_to_me = None
@@ -47,12 +61,20 @@ def render_my_template(template: str, **kwargs):
 @app.route("/robots.txt")
 @app.route("/styles.css")
 def get_static_from_root():
+    """
+    Make robots.txt available to crawlers and styles.css to browsers.
+    :return: desired static file
+    """
     return send_from_directory(app.static_folder, request.path[1:])
 
 
 @app.route("/")
 @is_logged_in
 def home():
+    """
+    Home page displaying the messages.
+    :return: index.html
+    """
     messages = get_user_messages(current_user())
     return render_my_template("index.html", messages=messages)
 
@@ -60,6 +82,10 @@ def home():
 @app.route("/my_questions")
 @is_logged_in
 def my_questions():
+    """
+    Overview of all questions the user asked and their answers if available.
+    :return: my_questions.html
+    """
     questions = get_questions_from_user(current_user())
     return render_my_template("my_questions.html",  questions=questions)
 
@@ -67,6 +93,12 @@ def my_questions():
 @app.route("/to_answer", methods=["POST", "GET"])
 @is_logged_in
 def to_answer():
+    """
+    Overview of all questions assigned to the user, grouped by questions they haven't answered and those,
+    they already answered.
+    From this view they can choose which question to answer next and do so.
+    :return: to_answer.html
+    """
     questions = get_questions_for_user(current_user())
     unanswered_questions = [question for question in questions if not question["answer"]]
     answered_questions = [question for question in questions if question["answer"]]
@@ -77,6 +109,10 @@ def to_answer():
 @app.route("/manage_friends")
 @is_logged_in
 def manage_friends():
+    """
+    Overview of friends, functionality to remove some of them, ask them questions and send new friend requests.
+    :return: friends.html
+    """
     friends = get_friends(current_user())
     num_of_friends = len(friends)
     return render_my_template("friends.html", friends=friends, numOfFriends=num_of_friends)
@@ -85,8 +121,15 @@ def manage_friends():
 @app.route("/get_usernames_list")
 @is_logged_in
 def get_usernames_list():
+    """
+    NO VIEW
+    AJAX call to get usernames starting with a given substring.
+    Used in user search to send friend requests
+    :return: json list of usernames starting with substring <startswith> or an empty list if no substring given
+    """
     startswith = request.args.get("startswith")
     if not startswith:
+        # Do not expose all usernames. Return an empty list when no substring given
         return jsonify([])
     else:
         usernames = get_usernames_starting_with(startswith)
@@ -98,17 +141,25 @@ def get_usernames_list():
 @app.route("/add_friend", methods=["POST"])
 @is_logged_in
 def add_friend():
+    """
+    NO VIEW
+    Logic function to add friend request to library and send notifications to other user.
+    :return: redirect back to /manage_friends
+    """
     username = request.form.get("username")
     user = current_user()
+    # other user has to be given, must exist and can't be the same as the user logged in.
     if not username or username == user or not user_exists(username):
         flash("User not found", "danger")
         return redirect("/manage_friends")
+    # There can be no more than one friend request / friend relationship between the same users
     if exists_friend_or_request(username, user):
         flash("You already are friends with that user or it exists a friend request.", "warning")
         return redirect("/manage_friends")
     if not add_friend_request(user, username):
         flash("An unexpected error occurred. Try again later.")
         return redirect("/manage_friends")
+    # Send email notification if user wishes so and has a confirmed email.
     if "friend_request" not in get_email_preferences_not(username):
         send_user_email(username, "New friend request", html_friend_request_mail(user))
     if not add_message(user, username, "friend_request"):
@@ -121,12 +172,18 @@ def add_friend():
 @app.route("/accept_friend_request", methods=["POST"])
 @is_logged_in
 def accept_friend_request():
+    """
+    NO VIEW
+    Logic function to confirm friend request in database and send notifications.
+    :return: redirect to home (/)
+    """
     username = current_user()
     if not confirm_friend(request.form.get("username"), username) \
             or not delete_message(request.form.get("message_id")):
         flash("An error occurred. Please try again later", "danger")
         return redirect("/")
     add_message(username, request.form.get("username"), "accepted_friend_request")
+    # if they didn't opt out and confirmed their email, send them an email.
     if "accepted_friend" not in get_email_preferences_not(request.form.get("username")):
         send_user_email(request.form.get("username"), "New friend", html_accepted_friend_mail(username))
     flash("Friend request accepted.", "success")
@@ -136,11 +193,17 @@ def accept_friend_request():
 @app.route("/decline_friend_request", methods=["POST"])
 @is_logged_in
 def decline_friend_request():
+    """
+    NO VIEW
+    Logic function to remove friend request and message from database and notify user.
+    :return: redirect back to home (/)
+    """
     if not delete_message(request.form.get("message_id")) \
             or not delete_friends_from_db(current_user(), request.form.get("username")):
         flash("An error occurred. Please try again later", "danger")
         return redirect("/")
     add_message(current_user(), request.form.get("username"), "declined_friend_request")
+    # No email is sent for declined requests
     flash("Friend request declined.", "important")
     return redirect("/")
 
@@ -148,12 +211,18 @@ def decline_friend_request():
 @app.route("/remove_friend",  methods=["POST"])
 @is_logged_in
 def remove_friend():
+    """
+    NO VIEW
+    Logic function to remove friendship from database and notify former friend.
+    :return: redirect back to /manage_friends
+    """
     username = request.form.get("username")
     if not username or not delete_friends_from_db(current_user(), username) \
             or not delete_message(request.form.get("message_id")):
         flash("An error occurred, please try again later", "danger")
         return redirect("/manage_friends")
     add_message(current_user(), username, "removed_friend")
+    # No email is sent for removed friends
     flash("Friend removed", "success")
     return redirect("/manage_friends")
 
@@ -161,6 +230,11 @@ def remove_friend():
 @app.route("/discard_message", methods=["POST"])
 @is_logged_in
 def discard_message():
+    """
+    NO VIEW
+    Logic function to remove read messages from database
+    :return: redirect back to home (/)
+    """
     if not delete_message(request.form.get("message_id")):
         flash("An error occurred, please try again.", "danger")
         return redirect("/")
@@ -171,6 +245,11 @@ def discard_message():
 @app.route("/ask_question", methods=["POST", "GET"])
 @is_logged_in
 def ask_question():
+    """
+    View to create new question and assign it to a friend.
+    Adds question to database and notifies assigned friend.
+    :return: redirect to all asked questions (/my_questions) if successful and back to ask_question if not.
+    """
     if request.method == "POST":
         friend = request.form.get("friend")
         question = request.form.get("question")
@@ -189,6 +268,8 @@ def ask_question():
         flash("Question asked", "success")
         return redirect("/my_questions")
     else:
+        # Get friends for dropdown with all friends to choose one to assign the question to
+        # If clicked to ask a specific friend, preselect them.
         friends = get_friends(current_user())
         friend = request.args.get("friend")
         return render_my_template("ask_question.html", friends=friends, ask_friend=friend)
@@ -197,6 +278,12 @@ def ask_question():
 @app.route("/answer_question", methods=["POST", "GET"])
 @is_logged_in
 def answer_question():
+    """
+    View to answer question the user was assigned to by a friend.
+    Adds answer to database and notifies friend
+    :return: answer_question.html from get
+    :return: home (/) from post
+    """
     if request.method == "POST":
         question_id = request.form.get("id")
         question = get_question(question_id)
@@ -211,6 +298,7 @@ def answer_question():
             flash("An error occurred, please try again.", "danger")
             redirect("/")
         add_message(current_user(), question["sender"], "answered_question")
+        # send email if user didn't opt out and confirmed their email.
         if "question_answered" not in get_email_preferences_not(question["sender"]):
             send_user_email(question["sender"], "Question answered", html_question_answered(current_user()))
         flash("Question answered", "success")
@@ -233,6 +321,12 @@ def answer_question():
 @app.route("/message_asked_question", methods=["POST"])
 @is_logged_in
 def message_asked_question():
+    """
+    When clicked on message informing about a new question the user got assigned to,
+    showing all questions they were assigned to. And deleting messages informing about
+    new questions as they saw all of them now
+    :return: redirect to /to_answer
+    """
     delete_all_messages_asked_question(current_user())
     return redirect("/to_answer")
 
@@ -240,6 +334,12 @@ def message_asked_question():
 @app.route("/message_answered_question", methods=["POST"])
 @is_logged_in
 def message_answered_question():
+    """
+    When clicked on message informing about a new answer to a question the user asked,
+    showing all questions they asked. And deleting messages informing about
+    new answers as they saw all of them now
+    :return: redirect to /my_questions
+    """
     delete_all_messages_answered_question(current_user())
     return redirect("/my_questions")
 
@@ -247,11 +347,21 @@ def message_answered_question():
 @app.route("/account", methods=["POST", "GET"])
 @is_logged_in
 def account():
+    """
+    View to manage account related details
+    1. Change password
+    2. Change email or add new email if the user didn't add one before
+    3. Update preferences for email notifications
+    :return: account.html
+    """
     if request.method == "POST":
+
+        # 1. Change password
         if request.form.get("type") == "change_password":
             old_password = request.form.get("old_password")
             new_password = request.form.get("new_password")
             confirmation = request.form.get("confirmation")
+            # Check given data and perform password change
             if not old_password:
                 flash("Old password required", "warning")
                 return redirect("/account")
@@ -273,18 +383,26 @@ def account():
             flash("Password changed", "success")
             return redirect("/account")
 
+        # 2. Change account email
         if request.form.get("type") == "change_email":
             new_email = request.form.get("new_email")
             if not new_email:
                 flash("new email required", "warning")
                 return redirect("/account")
             old_email = get_user_email(current_user())
+            # if the user never had an email in their account, we confirm as in the registration process
             if not old_email:
                 if not update_user_email(current_user(), new_email):
                     flash("An unexpected error occurred. Please try again later", "danger")
                     return render_my_template("account.html")
+                if not send_email(new_email, "Please confirm your email",
+                                  html_confirmation_email(generate_email_confirmation_link(new_email))):
+                    flash("An error occurred. Please try again later.", "danger")
+                    return redirect("/")
                 flash("Email set", "success")
                 return redirect("/account")
+            # if there is already an email assigned to their account, we don't update this before they
+            # didn't confirm the email
             else:
                 if not send_email(new_email, "Confirm new email",
                                   html_change_mail_email(generate_change_email_link(old_email, new_email))):
@@ -293,7 +411,9 @@ def account():
                 flash("Confirmation link sent", "success")
                 return redirect("/account")
 
+        # 3. Update email preferences
         if request.form.get("type") == "email_preferences":
+            # Save preferences as comma separated list in string to database
             email_preferences_not = []
             if not request.form.get("friend_request"):
                 email_preferences_not.append("friend_request")
@@ -310,6 +430,7 @@ def account():
             return redirect("/account")
 
     else:
+        # Show logged in user and email preferences in account view.
         username = current_user()
         email_preferences_not = get_email_preferences_not(username)
         return render_my_template("account.html", username=username, email_preferences_not=email_preferences_not)
@@ -318,6 +439,12 @@ def account():
 @app.route("/logout")
 @is_logged_in
 def logout():
+    """
+    NO VIEW
+    Logic function to log user out
+    Removes session and redirects to / (which is redirected to /login as they are no longer logged in)
+    :return: redirect to home (/)
+    """
     if not logout_from_session():
         flash("An error occurred, please try again", "danger")
         return redirect("/")
@@ -327,20 +454,26 @@ def logout():
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
+    """
+    View for user to log in.
+    :return: login.html from get
+    :return: redirect to home (/) if successful
+    :return: redirect back to /login if unsuccessful
+    """
     if request.method == "POST":
         username = request.form.get("username")
         if not username:
             flash("Username required", "warning")
-            return render_my_template("login.html")
+            return redirect("login.html")
         if not request.form.get("password"):
             flash("Password required", "warning")
-            return render_my_template("login.html")
+            return redirect("login.html")
         if not verify_password(username, request.form.get("password")):
             flash("Wrong username or password", "danger")
-            return render_my_template("login.html")
+            return redirect("login.html")
         if not login_to_session(username):
             flash("An error occurred, please try again.", "danger")
-            return render_my_template("login.html")
+            return redirect("login.html")
         flash("Login successful", "success")
         return redirect("/")
     else:
@@ -349,49 +482,67 @@ def login():
 
 @app.route("/register", methods=["POST", "GET"])
 def register():
+    """
+    View to register user.
+    Logs user in automatically when successful.
+    :return: register.html from get
+    :return: redirect to home (/) when successful
+    :return: redirect back to /register when unsuccessful
+    """
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
         email = request.form.get("email")
+        # Check given data
         if not username:
             flash("Username required", "warning")
-            return render_my_template("register.html")
+            return redirect("/register")
         if not password:
             flash("Password required", "warning")
-            return render_my_template("register.html")
+            return redirect("/register")
         if not request.form.get("confirmation"):
             flash("Please confirm password", "warning")
-            return render_my_template("register.html")
-        if get_user_email(username):
+            return redirect("/register")
+        if user_exists(username):
             flash("Username already exists", "danger")
-            return render_my_template("register.html")
+            return redirect("/register")
         if not password == request.form.get("confirmation"):
             flash("Passwords do not match", "warning")
-            return render_my_template("register.html")
+            return redirect("/register")
         if not check_password_requirements(password):
             flash("Password does not meet requirements")
-            return render_my_template("register.html")
+            return redirect("/register")
 
+        # Register user
         if not create_new_user(username, generate_password_hash(password)):
             flash("An unexpected error occurred. Please try again later", "danger")
-            return render_my_template("register.html")
+            return redirect("/register")
+        # email is optional
         if email and is_email(email):
             update_user_email(username, email)
             if not send_email(email, "Please confirm your email",
                               html_confirmation_email(generate_email_confirmation_link(email))):
                 flash("An error occurred. Please try again later.", "danger")
-                return redirect("/")
+                return redirect("/register")
+        # Log in automatically
         if not login_to_session(username):
             flash("An error occurred, please try again", "danger")
-            return render_my_template("register.html")
+            return render_my_template("/register")
         flash("You are successfully registered", "success")
-        return redirect("/login")
+        return redirect("/")
     else:
         return render_my_template("register.html")
 
 
 @app.route("/confirm/<token>")
 def confirm(token):
+    """
+    Confirm email with link given in email
+    Update email confirmed in database
+    :param token: Token generated by itsdangerous
+    :return: redirect to home (/)
+    :return: bad_confirmation_link.html when unsuccessful
+    """
     try:
         email = decrypt_token(token, "email-confirmation-key")
     except Exception as e:
@@ -399,13 +550,20 @@ def confirm(token):
         return render_my_template("bad_confirmation_link.html")
     if not update_email_confirmed(email):
         flash("An error occurred, please try again", "danger")
-        return render_my_template("register.html")
+        return redirect("/")
     flash("Email confirmed. Thank you", "success")
     return redirect("/")
 
 
 @app.route("/change_email/<token>")
 def change_email(token):
+    """
+    Confirm email change in account that already had an email assigned to it.
+    Updates email in database
+    :param token: Token generated by itsdangerous
+    :return: redirect to home (/) when successful
+    :return: bad_change_email_link.html when unsuccessful
+    """
     try:
         data = decrypt_token(token, "change-email-key")
         old_email = data["old_email"]
@@ -424,29 +582,37 @@ def change_email(token):
 
 @app.route("/reset_password/<token>", methods=["POST", "GET"])
 def reset_password(token):
+    """
+    Reset password with password reset link.
+    :param token: token generated by itsdangerous
+    :return: reset_password.html from get if link valid
+    :return: bad_password_reset_link.html if link not valid
+    :return: redirect to /login if successful
+    :return: redirect back to reset_password if unsuccessful
+    """
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("new_password")
         confirmation = request.form.get("confirmation")
         if not username:
             flash("Username required", "warning")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
         if not password:
             flash("Password required")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
         if not confirmation:
             flash("Please confirm password", "warning")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
         if not password == confirmation:
             flash("Passwords do not match", "warning")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
         if not check_password_requirements(password):
             flash("Password does not meet criteria", "warning")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
 
         if not update_user_hash(generate_password_hash(password), username):
             flash("An error occurred, please try again", "danger")
-            return render_my_template("reset_password.html")
+            return render_my_template("reset_password.html", username=username)
 
         flash("Password reset successfully", "success")
         return redirect("/login")
@@ -461,6 +627,11 @@ def reset_password(token):
 
 @app.route("/request_password_reset", methods=["POST", "GET"])
 def request_password_reset():
+    """
+    View to enter username from forgot password? link.
+    Sends password reset mail to user if there is an email associated with their account.
+    :return: request_password_reset.html
+    """
     if request.method == "POST":
         username = request.form.get("username")
         if not username:
@@ -478,6 +649,11 @@ def request_password_reset():
 
 @app.teardown_appcontext
 def close_db(exception):
+    """
+    Close database on app closing.
+    :param exception: From app.teardown_appcontext, is passed to database.py
+    :return: None
+    """
     close_connection(exception)
 
 

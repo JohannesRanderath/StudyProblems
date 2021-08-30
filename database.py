@@ -73,7 +73,10 @@ def get_user_email(username):
     try:
         db = get_db()
         cur = db.cursor()
-        return cur.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
+        if cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username, )):
+            return cur.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
+        else:
+            return False
     except Exception as e:
         print("In db.get_user_email", e)
         return False

@@ -1,8 +1,5 @@
-img {
-    max-width: 100%;
-}
-
 .main {
+    /* html content block */
     text-align: center;
     overflow-x: auto;
     padding-top: 70px;
@@ -10,11 +7,13 @@ img {
 }
 
 .form-control {
+    /* form item */
     display: inline-block;
     width: auto;
 }
 
 .footer {
+    /* footer should be at the bottom of the page and should be of slightly different color. */
     position: fixed;
     bottom: 0;
     width: 100%;
@@ -28,6 +27,7 @@ img {
 
 
 .alert {
+    /* message badges should be below navbar */
     padding-top: 70px;
 }
 
