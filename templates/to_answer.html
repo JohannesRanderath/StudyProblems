@@ -17,22 +17,26 @@
         <tr>
             <th>Question from</th>
             <th>Question</th>
+            <th class="col-sm-1">Answer</th>
         </tr>
         {% for question in unanswered_questions %}
             <tr>
                 <td>{{ question["sender"] }}</td>
                 <td>{{ question["question"] }}</td>
-                <td>
-                    <form action="/answer_question" method="get">
-                        <label>
-                            <input type="text" name="id" value="{{ question["id"] }}" hidden required>
-                        </label>
-                        <button type="submit" class="btn btn-primary">Answer</button>
-                    </form>
+                <td class="col-sm-1">
+                    <div class="p-0 col-auto">
+                        <form action="/answer_question" method="get">
+                            <label>
+                                <input type="text" name="id" value="{{ question["id"] }}" hidden required>
+                            </label>
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                        </form>
+                    </div>
                 </td>
             </tr>
         {% endfor %}
         </table>
+        <br>
         {% endif %}
         {% if answered_questions %}
         <h4>Answered questions</h4>

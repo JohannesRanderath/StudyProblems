@@ -17,27 +17,31 @@
                     <tr>
                         {% if message["type"] == "friend_request" %}
                             <td class="message_text">{{ message["sender"] }} sent you a friend request.</td>
-                            <td>
-                                <form action="/accept_friend_request" method="post">
-                                    <label>
-                                        <input name="username" value="{{ message["sender"] }}" readonly required hidden>
-                                    </label>
-                                    <label>
-                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
-                                    </label>
-                                    <button type="submit" class="btn btn-success">Accept</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="/decline_friend_request" method="post">
-                                    <label>
-                                        <input name="username" value="{{ message["sender"] }}" readonly required hidden>
-                                    </label>
-                                    <label>
-                                        <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
-                                    </label>
-                                    <button type="submit" class="btn btn-danger">Decline</button>
-                                </form>
+                            <td class="col-sm-1">
+                                <div class="row">
+                                    <div class="p-0 col-auto">
+                                        <form action="/accept_friend_request" method="post">
+                                            <label>
+                                                <input name="username" value="{{ message["sender"] }}" readonly required hidden>
+                                            </label>
+                                            <label>
+                                                <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                            </label>
+                                            <button type="submit" class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i></button>
+                                        </form>
+                                    </div>
+                                    <div class="p-0 col-auto">
+                                        <form action="/decline_friend_request" method="post">
+                                            <label>
+                                                <input name="username" value="{{ message["sender"] }}" readonly required hidden>
+                                            </label>
+                                            <label>
+                                                <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
+                                            </label>
+                                            <button type="submit" class="btn btn-danger"><i class="fa fa-times" aria-hidden="true"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
                             </td>
 
                         {% elif message["type"] == "accepted_friend_request" %}
@@ -80,7 +84,7 @@
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
-                                    <button type="submit" class="btn btn-primary">Show questions</button>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-eye" aria-hidden="true"></i></button>
                                 </form>
                             </td>
                         {% elif message["type"] == "answered_question" %}
@@ -90,7 +94,7 @@
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
-                                    <button type="submit" class="btn btn-primary">Show questions</button>
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-eye" aria-hidden="true"></i></button>
                                 </form>
                             </td>
                         {% endif %}

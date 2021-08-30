@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 
 
 def check_password_requirements(new_password):

@@ -26,13 +26,13 @@
                         } else {
                             for (let i = 0; i < usernames.length; i++) {
                                 html += `<tr>
-                                            <td>${usernames[i]}</td>
+                                            <td style="text-align: right">${usernames[i]}</td>
                                             <td>
                                                 <form method="post" action="/add_friend">
                                                     <label>
                                                         <input type="text" value="${usernames[i]}" name="username" hidden>
                                                     </label>
-                                                    <button class="btn btn-primary" type="submit">Add friend</button>
+                                                    <button class="btn btn-primary" type="submit"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                                 </form>
                                             </td>
                                         </tr>`;
@@ -76,25 +76,30 @@
         <table class="table table-striped">
             <tbody>
                 <th>Username</th>
+                <th class="col-sm-1"></th>
 
                 {% for friend in friends %}
                     <tr>
                         <td>{{ friend }}</td>
-                        <td>
-                            <form action="/ask_question" method="get">
-                                <label>
-                                    <input type="text" name="friend" value="{{ friend }}" hidden required readonly>
-                                </label>
-                                <button type="submit" class="btn btn-primary">Ask question</button>
-                            </form>
-                        </td>
-                        <td>
-                            <form action="/remove_friend" method="post">
-                                <label>
-                                    <input type="text" name="username" value="{{ friend }}" hidden required readonly>
-                                </label>
-                                <button type="submit" class="btn btn-danger">Remove friend</button>
-                            </form>
+                        <td class="col-sm-1">
+                            <div class="row">
+                                <div class="p-0 col-auto">
+                                    <form action="/ask_question" method="get">
+                                        <label>
+                                            <input type="text" name="friend" value="{{ friend }}" hidden required readonly>
+                                        </label>
+                                        <button type="submit" class="btn btn-primary"><i class="fa fa-question" aria-hidden="true"></i></button>
+                                    </form>
+                                </div>
+                                <div class="p-0 col-auto">
+                                    <form action="/remove_friend" method="post">
+                                        <label>
+                                            <input type="text" name="username" value="{{ friend }}" hidden required readonly>
+                                        </label>
+                                        <button type="submit" class="btn btn-danger"><i class="fa fa-trash-alt" aria-hidden="true"></i></button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}

@@ -22,10 +22,23 @@ Session(app)
 def render_my_template(template: str, **kwargs):
     user = current_user()
     if user:
-        num_of_messages = len(get_user_messages(current_user()))
+        num_of_messages = len(get_user_messages(user))
+        questions_to_me = get_questions_for_user(user)
+        num_of_questions_to_me = len(questions_to_me)
+        num_of_unanswered_questions_to_me = len([question for question in questions_to_me if not question["answer"]])
+        questions_from_me = get_questions_from_user(user)
+        num_of_questions_from_me = len(questions_from_me)
+        num_of_unanswered_questions_from_me = len([question for question in questions_from_me if not question["answer"]])
     else:
         num_of_messages = None
-    return render_template(template, num_of_messages=num_of_messages, **kwargs)
+        num_of_questions_to_me = None
+        num_of_unanswered_questions_to_me = None
+        num_of_questions_from_me = None
+        num_of_unanswered_questions_from_me = None
+    return render_template(template, num_of_messages=num_of_messages, num_of_questions_to_me=num_of_questions_to_me,
+                           num_of_questions_from_me=num_of_questions_from_me,
+                           num_of_unanswered_questions_to_me=num_of_unanswered_questions_to_me,
+                           num_of_unanswered_questions_from_me=num_of_unanswered_questions_from_me,  **kwargs)
 
 
 @app.route("/robots.txt")
