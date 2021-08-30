@@ -351,4 +351,29 @@ def add_answer(question_id, answer):
         return True
     except Exception as e:
         print("In db.add_answer: ", e)
+        return ""
+
+
+def get_email_preferences_not(username):
+    try:
+        db = get_db()
+        cur = db.cursor()
+        email_preferences_not = cur.execute("SELECT email_preferences_not FROM users WHERE username=?;",
+                                            (username, )).fetchone()[0].split(",")
+        return email_preferences_not
+    except Exception as e:
+        print("In db.get_email_preferences_not: ", e)
+        return False
+
+
+def update_email_preferences(username, email_preferences_not):
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute("UPDATE users SET email_preferences_not=? WHERE username=?;",
+                    (",".join(email_preferences_not), username))
+        db.commit()
+        return True
+    except Exception as e:
+        print("In db.update_email_preferences: ", e)
         return False

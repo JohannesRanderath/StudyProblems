@@ -5,13 +5,14 @@ from session_handling import is_logged_in, current_user, logout_from_session, lo
 from patterns_and_types import check_password_requirements, is_email
 from security import generate_password_hash, verify_password, decrypt_token, generate_password_reset_link, \
     generate_change_email_link, generate_email_confirmation_link
-from mail import html_confirmation_email, html_change_mail_email, html_reset_password_mail, html_friend_request_mail,\
-    send_email, send_user_email
+from mail import html_confirmation_email, html_change_mail_email, html_reset_password_mail, html_friend_request_mail, \
+    html_accepted_friend_mail, html_new_question_mail, html_question_answered, send_email, send_user_email
 from database import create_new_user, update_user_hash, update_user_email, update_email_confirmed, get_user_email,\
     get_username_by_email, close_connection, get_usernames_starting_with, user_exists, add_friend_request, add_message,\
     get_user_messages, confirm_friend, delete_message, get_friends, exists_friend_or_request, delete_friends_from_db, \
     get_questions_from_user, get_questions_for_user, add_question, get_question, question_exists, add_answer, \
-    delete_all_messages_asked_question, delete_all_messages_answered_question
+    delete_all_messages_asked_question, delete_all_messages_answered_question, get_email_preferences_not, \
+    update_email_preferences
 
 app = Flask(__name__)
 app.config.from_object("config.Config")
@@ -25,10 +26,12 @@ def render_my_template(template: str, **kwargs):
         num_of_messages = len(get_user_messages(user))
         questions_to_me = get_questions_for_user(user)
         num_of_questions_to_me = len(questions_to_me)
-        num_of_unanswered_questions_to_me = len([question for question in questions_to_me if not question["answer"]])
+        num_of_unanswered_questions_to_me = len([question for question in questions_to_me
+                                                 if not question["answer"]])
         questions_from_me = get_questions_from_user(user)
         num_of_questions_from_me = len(questions_from_me)
-        num_of_unanswered_questions_from_me = len([question for question in questions_from_me if not question["answer"]])
+        num_of_unanswered_questions_from_me = len([question for question in questions_from_me
+                                                   if not question["answer"]])
     else:
         num_of_messages = None
         num_of_questions_to_me = None
@@ -68,7 +71,7 @@ def to_answer():
     unanswered_questions = [question for question in questions if not question["answer"]]
     answered_questions = [question for question in questions if question["answer"]]
     return render_my_template("to_answer.html", unanswered_questions=unanswered_questions,
-                           answered_questions=answered_questions)
+                              answered_questions=answered_questions)
 
 
 @app.route("/manage_friends")
@@ -106,7 +109,8 @@ def add_friend():
     if not add_friend_request(user, username):
         flash("An unexpected error occurred. Try again later.")
         return redirect("/manage_friends")
-    send_user_email(username, "New friend request", html_friend_request_mail(user))
+    if "friend_request" not in get_email_preferences_not(username):
+        send_user_email(username, "New friend request", html_friend_request_mail(user))
     if not add_message(user, username, "friend_request"):
         flash("An unexpected error occurred. Try again later.", "danger")
         return redirect("/manage_friends")
@@ -117,11 +121,14 @@ def add_friend():
 @app.route("/accept_friend_request", methods=["POST"])
 @is_logged_in
 def accept_friend_request():
-    if not confirm_friend(request.form.get("username"), current_user()) \
+    username = current_user()
+    if not confirm_friend(request.form.get("username"), username) \
             or not delete_message(request.form.get("message_id")):
         flash("An error occurred. Please try again later", "danger")
         return redirect("/")
-    add_message(current_user(), request.form.get("username"), "accepted_friend_request")
+    add_message(username, request.form.get("username"), "accepted_friend_request")
+    if "accepted_friend" not in get_email_preferences_not(request.form.get("username")):
+        send_user_email(request.form.get("username"), "New friend", html_accepted_friend_mail(username))
     flash("Friend request accepted.", "success")
     return redirect("/")
 
@@ -129,7 +136,8 @@ def accept_friend_request():
 @app.route("/decline_friend_request", methods=["POST"])
 @is_logged_in
 def decline_friend_request():
-    if not delete_message(request.form.get("message_id")):
+    if not delete_message(request.form.get("message_id")) \
+            or not delete_friends_from_db(current_user(), request.form.get("username")):
         flash("An error occurred. Please try again later", "danger")
         return redirect("/")
     add_message(current_user(), request.form.get("username"), "declined_friend_request")
@@ -176,6 +184,8 @@ def ask_question():
             flash("An error occurred, please try again later", "danger")
             return redirect("/ask_question")
         add_message(current_user(), friend, "asked_question")
+        if "new_question" not in get_email_preferences_not(friend):
+            send_user_email(friend, "New question", html_new_question_mail(current_user()))
         flash("Question asked", "success")
         return redirect("/my_questions")
     else:
@@ -200,7 +210,9 @@ def answer_question():
         if not add_answer(question_id, answer):
             flash("An error occurred, please try again.", "danger")
             redirect("/")
-        print(add_message(current_user(), question["sender"], "answered_question"))
+        add_message(current_user(), question["sender"], "answered_question")
+        if "question_answered" not in get_email_preferences_not(question["sender"]):
+            send_user_email(question["sender"], "Question answered", html_question_answered(current_user()))
         flash("Question answered", "success")
         return redirect("/")
     else:
@@ -242,45 +254,65 @@ def account():
             confirmation = request.form.get("confirmation")
             if not old_password:
                 flash("Old password required", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             if not new_password:
                 flash("New password required", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             if not confirmation:
                 flash("Please confirm password", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             if not verify_password(current_user(), old_password):
                 flash("Wrong password", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             if not new_password == confirmation:
                 flash("Passwords do not match", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             if not update_user_hash(generate_password_hash(new_password), current_user()):
                 flash("An unexpected error occurred. Please try again later", "danger")
-                return redirect("account.html")
+                return redirect("/account")
             flash("Password changed", "success")
-            return redirect("account.html")
+            return redirect("/account")
+
         if request.form.get("type") == "change_email":
             new_email = request.form.get("new_email")
             if not new_email:
                 flash("new email required", "warning")
-                return redirect("account.html")
+                return redirect("/account")
             old_email = get_user_email(current_user())
             if not old_email:
                 if not update_user_email(current_user(), new_email):
                     flash("An unexpected error occurred. Please try again later", "danger")
                     return render_my_template("account.html")
                 flash("Email set", "success")
-                return redirect("account.html")
+                return redirect("/account")
             else:
                 if not send_email(new_email, "Confirm new email",
                                   html_change_mail_email(generate_change_email_link(old_email, new_email))):
                     flash("An error occurred. Please try again later.", "danger")
                     return redirect("/")
                 flash("Confirmation link sent", "success")
-                return redirect("account.html")
+                return redirect("/account")
+
+        if request.form.get("type") == "email_preferences":
+            email_preferences_not = []
+            if not request.form.get("friend_request"):
+                email_preferences_not.append("friend_request")
+            if not request.form.get("accepted_friend"):
+                email_preferences_not.append("accepted_friend")
+            if not request.form.get("new_question"):
+                email_preferences_not.append("new_question")
+            if not request.form.get("question_answered"):
+                email_preferences_not.append("question_answered")
+            if not update_email_preferences(current_user(), email_preferences_not):
+                flash("An error occurred, please try again later.", "danger")
+                return redirect("/")
+            flash("Email preferences updated", "success")
+            return redirect("/account")
+
     else:
-        return render_my_template("account.html", username=current_user())
+        username = current_user()
+        email_preferences_not = get_email_preferences_not(username)
+        return render_my_template("account.html", username=username, email_preferences_not=email_preferences_not)
 
 
 @app.route("/logout")
@@ -434,7 +466,8 @@ def request_password_reset():
         if not username:
             flash("Username required", "warning")
             return render_my_template("request_password_reset.html")
-        if not send_user_email(username, "Reset password", html_reset_password_mail(generate_password_reset_link(username))):
+        if not send_user_email(username, "Reset password",
+                               html_reset_password_mail(generate_password_reset_link(username))):
             flash("An error occurred. Probably the username doesn't exist or no email is associated with it.", "danger")
             return render_my_template("request_password_reset.html")
         flash("Reset link sent", "success")

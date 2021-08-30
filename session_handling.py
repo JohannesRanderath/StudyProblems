@@ -1,4 +1,4 @@
-from flask import session, redirect
+from flask import session, redirect, flash
 from functools import wraps
 
 

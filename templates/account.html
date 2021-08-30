@@ -45,5 +45,32 @@
         </div>
         <button class="btn btn-primary" type="submit">Add email</button>
     </form>
+    <br>
+    <hr>
+    <br>
+    <h3>Email preferences</h3>
+    <p>Receive emails when...</p>
+    <form action="/account" method="post">
+        <label for="data identifier" hidden>
+            <input name="type" value="email_preferences" hidden required>
+        </label>
+        <div class="form-group">
+            <label for="friend_request">... someone sent you a friend request</label>
+            <input name="friend_request" id="friend_request" type="checkbox" {% if "friend_request" not in email_preferences_not %} checked {% endif %}>
+        </div>
+        <div class="form-group">
+            <label for="accepted_friend">... someone accepted your friend request</label>
+            <input name="accepted_friend" id="accepted_friend" type="checkbox" {% if "accepted_friend" not in email_preferences_not %} checked {% endif %}>
+        </div>
+        <div class="form-group">
+            <label for="new_question">... someone asked you a question</label>
+            <input name="new_question" id="new_question" type="checkbox" {% if "new_question" not in email_preferences_not %} checked {% endif %}>
+        </div>
+        <div class="form-group">
+            <label for="question_answered">... your friend answered your question</label>
+            <input name="question_answered" id="question_answered" type="checkbox" {% if "question_answered" not in email_preferences_not %} checked {% endif %}>
+        </div>
+        <button class="btn btn-primary" type="submit">Update</button>
+    </form>
 
 {% endblock %}

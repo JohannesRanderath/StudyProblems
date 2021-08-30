@@ -38,3 +38,15 @@ def html_reset_password_mail(password_reset_link):
 
 def html_friend_request_mail(username):
     return render_template("emails/friend_request_email.html", username=username)
+
+
+def html_accepted_friend_mail(username):
+    return render_template("emails/accepted_friend_email.html", username=username)
+
+
+def html_new_question_mail(username):
+    return render_template("emails/new_question_email.html", username=username)
+
+
+def html_question_answered(username):
+    return render_template("emails/question_answered_email.html", username=username)
