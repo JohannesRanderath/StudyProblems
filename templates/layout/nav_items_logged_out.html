@@ -7,10 +7,10 @@
     <!-- nav items right -->
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "login" %} class="nav-link active"
-            {% else %} class="nav-link" {% endif %} href="/login">Log in</a>
+            {% else %} class="nav-link" {% endif %} href="{{ url_for("login") }}">Log in</a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "register" %} class="nav-link active"
-            {% else %} class="nav-link" {% endif %} href="/register">Register</a>
+            {% else %} class="nav-link" {% endif %} href="{{ url_for("register") }}">Register</a>
     </li>
 </ul>

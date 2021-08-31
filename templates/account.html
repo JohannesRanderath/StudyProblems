@@ -11,7 +11,7 @@
 
     <!-- First function: Change password -->
     <h3>Change password</h3>
-    <form action="/account" method="post">
+    <form action="{{ url_for("account") }}" method="post">
         <label for="data identifier" hidden>
             <input name="type" value="change_password" hidden required>
         </label>
@@ -37,7 +37,7 @@
     <br>
     <!-- Second function: Change email address -->
     <h3>Change / add email</h3>
-    <form action="/account" method="post">
+    <form action="{{ url_for("account") }}" method="post">
         <label for="data identifier" hidden>
             <input name="type" value="change_email" hidden required>
         </label>
@@ -54,7 +54,7 @@
     <!-- Third function: Change email preferences -->
     <h3>Email preferences</h3>
     <p>Receive emails when...</p>
-    <form action="/account" method="post">
+    <form action="{{ url_for("account") }}" method="post">
         <label for="data identifier" hidden>
             <input name="type" value="email_preferences" hidden required>
         </label>

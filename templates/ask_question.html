@@ -10,9 +10,9 @@
 
     <h3>Ask question</h3>
     {% if not friends %}
-        <p>First, add a <a href="/manage_friends">friend</a>.</p>
+        <p>First, add a <a href="{{ url_for("manage_friends") }}">friend</a>.</p>
     {% else %}
-        <form action="/ask_question" method="post">
+        <form action="{{ url_for("ask_question") }}" method="post">
             <div class="form-group">
                 <label>
                     <select name="friend" required>

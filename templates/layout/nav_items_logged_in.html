@@ -3,43 +3,43 @@
     <!-- nav items left -->
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "home" %} class="nav-link active"
-            {% else %} class="nav-link" {% endif %} href="/">Home</a>
+            {% else %} class="nav-link" {% endif %} href="{{ url_for("home") }}">Home</a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "ask_question" %} class="nav-link active"
-           {% else %} class="nav-link" {% endif %} href="/ask_question">Ask question</a>
+           {% else %} class="nav-link" {% endif %} href="{{ url_for("ask_question") }}">Ask question</a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "my_questions" %} class="nav-link active"
-           {% else %} class="nav-link" {% endif %} href="/my_questions">
+           {% else %} class="nav-link" {% endif %} href="{{ url_for("my_questions") }}">
             My questions <span class="badge">{{ num_of_unanswered_questions_from_me }}/{{ num_of_questions_from_me }}</span>
         </a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "to_answer" %} class="nav-link active"
-           {% else %} class="nav-link" {% endif %} href="/to_answer">
+           {% else %} class="nav-link" {% endif %} href="{{ url_for("to_answer") }}">
             Questions to me <span class="badge">{{ num_of_unanswered_questions_to_me }}/{{ num_of_questions_to_me }}</span>
         </a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "manage_friends" %} class="nav-link active"
-           {% else %} class="nav-link" {% endif %} href="/manage_friends">Friends</a>
+           {% else %} class="nav-link" {% endif %} href="{{ url_for("manage_friends") }}">Friends</a>
     </li>
 </ul>
 
 <ul class="navbar-nav ms-auto">
     <!-- nav items right -->
     <li class="nav-link">
-        <a class="nav-link" href="/" style="display: inline">
+        <a class="nav-link" href="{{ url_for("home") }}" style="display: inline">
 
             <span class="badge badge-primary"><i class="fa fa-bell-o" aria-hidden="true"></i> {{ num_of_messages }}</span>
         </a>
     </li>
     <li class="nav-item">
         <a {% if request.url_rule.endpoint == "account" %} class="nav-link active"
-           {% else %} class="nav-link" {% endif %} href="/account">Account</a>
+           {% else %} class="nav-link" {% endif %} href="{{ url_for("account") }}">Account</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/logout">Log out</a>
+        <a class="nav-link" href="{{ url_for("logout") }}">Log out</a>
     </li>
 </ul>

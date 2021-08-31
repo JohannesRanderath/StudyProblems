@@ -29,7 +29,7 @@
                                 html += `<tr>
                                             <td style="text-align: right">${usernames[i]}</td>
                                             <td>
-                                                <form method="post" action="/add_friend">
+                                                <form method="post" action="{{ url_for("add_friend") }}">
                                                     <label>
                                                         <input type="text" value="${usernames[i]}" name="username" hidden>
                                                     </label>
@@ -86,7 +86,7 @@
                         <td class="col-sm-1">
                             <div class="row">
                                 <div class="p-0 col-auto">
-                                    <form action="/ask_question" method="get">
+                                    <form action="{{ url_for("ask_question") }}" method="get">
                                         <label>
                                             <input type="text" name="friend" value="{{ friend }}" hidden required readonly>
                                         </label>
@@ -94,7 +94,7 @@
                                     </form>
                                 </div>
                                 <div class="p-0 col-auto">
-                                    <form action="/remove_friend" method="post">
+                                    <form action="{{ url_for("remove_friend") }}" method="post">
                                         <label>
                                             <input type="text" name="username" value="{{ friend }}" hidden required readonly>
                                         </label>

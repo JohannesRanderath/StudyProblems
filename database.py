@@ -120,8 +120,6 @@ def get_user_email(username:str):
     try:
         db = get_db()
         cur = db.cursor()
-        print(cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username, )).fetchone()[0])
-        print(cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username,)).fetchone()[0] == 1)
         if cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username, )).fetchone()[0] == 1:
             return cur.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
         else:

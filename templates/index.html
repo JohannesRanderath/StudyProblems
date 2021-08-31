@@ -21,7 +21,7 @@
                             <td class="col-sm-1">
                                 <div class="row">
                                     <div class="p-0 col-auto">
-                                        <form action="/accept_friend_request" method="post">
+                                        <form action="{{ url_for("accept_friend_request") }}" method="post">
                                             <label>
                                                 <input name="username" value="{{ message["sender"] }}" readonly required hidden>
                                             </label>
@@ -32,7 +32,7 @@
                                         </form>
                                     </div>
                                     <div class="p-0 col-auto">
-                                        <form action="/decline_friend_request" method="post">
+                                        <form action="{{ url_for("decline_friend_request") }}" method="post">
                                             <label>
                                                 <input name="username" value="{{ message["sender"] }}" readonly required hidden>
                                             </label>
@@ -48,7 +48,7 @@
                         {% elif message["type"] == "accepted_friend_request" %}
                             <td class="message_text">{{ message["sender"] }} accepted your friend request.</td>
                             <td>
-                                <form action="/discard_message" method="post">
+                                <form action="{{ url_for("discard_message") }}" method="post">
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
@@ -59,7 +59,7 @@
                         {% elif message["type"] == "declined_friend_request" %}
                             <td class="message_text">{{ message["sender"] }} declined your friend request.</td>
                             <td>
-                                <form action="/discard_message" method="post">
+                                <form action="{{ url_for("discard_message") }}" method="post">
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
@@ -70,7 +70,7 @@
                         {% elif message["type"] == "removed_friend" %}
                             <td class="message_text">{{ message["sender"] }} removed you as a friend.</td>
                             <td>
-                                <form action="/discard_message" method="post">
+                                <form action="{{ url_for("discard_message") }}" method="post">
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
@@ -81,7 +81,7 @@
                         {% elif message["type"] == "asked_question" %}
                             <td class="message_text">{{ message["sender"] }} asked you a question.</td>
                             <td>
-                                <form action="/message_asked_question" method="post">
+                                <form action="{{ url_for("message_asked_question") }}" method="post">
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>
@@ -91,7 +91,7 @@
                         {% elif message["type"] == "answered_question" %}
                             <td class="message_text">{{ message["sender"] }} answered your question.</td>
                             <td>
-                                <form action="/message_answered_question" method="post">
+                                <form action="{{ url_for("message_answered_question") }}" method="post">
                                     <label>
                                         <input name="message_id" value="{{ message["id"] }}" readonly required hidden>
                                     </label>

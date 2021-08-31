@@ -10,7 +10,7 @@
 
     <h3>Register</h3>
     <p>Passwords must contain 8 characters, of which one has to be an uppercase letter, one a lowercase letter and one a number.</p>
-    <form action="/register" method="post">
+    <form action="{{ url_for("register") }}" method="post">
         <div class="form-group">
             <label for="username">
                 <input class="form-control" autocomplete="off" autofocus name="username" placeholder="Username" type="text" required>

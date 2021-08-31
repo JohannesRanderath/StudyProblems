@@ -1,4 +1,4 @@
-from flask import session, redirect, flash
+from flask import session, redirect, url_for
 from functools import wraps
 
 
@@ -11,7 +11,7 @@ def is_logged_in(route_function):
     @wraps(route_function)
     def do_the_magic(*args, **kwargs):
         if "username" not in session.keys():
-            return redirect("/login")
+            return redirect(url_for("login"))
         else:
             return route_function(*args, **kwargs)
 
