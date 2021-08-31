@@ -20,6 +20,7 @@ app.config.from_object("config.Config")
 Session(app)
 
 
+# TODO: Try to preserve form content when providing illegal parameters
 # TODO: replace links with url_for
 # TODO: Project video
 # TODO: Remove email password from config before submitting
@@ -95,6 +96,7 @@ def my_questions():
     # Display questions oldest to newest
     if questions:
         questions = list(reversed(questions))
+    message_answered_question()
     return render_my_template("my_questions.html",  questions=questions)
 
 
@@ -113,6 +115,7 @@ def to_answer():
         questions = list(reversed(questions))
     unanswered_questions = [question for question in questions if not question["answer"]]
     answered_questions = [question for question in questions if question not in unanswered_questions]
+    message_asked_question()
     return render_my_template("to_answer.html", unanswered_questions=unanswered_questions,
                               answered_questions=answered_questions)
 
@@ -145,7 +148,8 @@ def get_usernames_list():
     else:
         usernames = get_usernames_starting_with(startswith)
         usernames = [username[0] for username in usernames]
-        usernames.remove(current_user())
+        if current_user() in usernames:
+            usernames.remove(current_user())
         return jsonify(usernames)
 
 
@@ -405,7 +409,7 @@ def account():
             if not old_email:
                 if not update_user_email(current_user(), new_email):
                     flash("An unexpected error occurred. Please try again later", "danger")
-                    return render_my_template("account.html")
+                    return redirect("/account")
                 if not send_email(new_email, "Please confirm your email",
                                   html_confirmation_email(generate_email_confirmation_link(
                                       new_email, app.config["EMAIL_CONFIRMATION_SALT"]))):
@@ -477,16 +481,16 @@ def login():
         username = request.form.get("username")
         if not username:
             flash("Username required", "warning")
-            return redirect("login.html")
+            return redirect("/login")
         if not request.form.get("password"):
             flash("Password required", "warning")
-            return redirect("login.html")
+            return redirect("/login")
         if not verify_password(username, request.form.get("password")):
             flash("Wrong username or password", "danger")
-            return redirect("login.html")
+            return redirect("/login")
         if not login_to_session(username):
             flash("An error occurred, please try again.", "danger")
-            return redirect("login.html")
+            return redirect("/login")
         flash("Login successful", "success")
         return redirect("/")
     else:

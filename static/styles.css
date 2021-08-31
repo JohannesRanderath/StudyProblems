@@ -32,3 +32,7 @@
 .message_text {
     column-span: 3;
 }
+
+.nojump {
+    position: relative;
+}
