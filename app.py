@@ -20,9 +20,10 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: Let sessions timeout
+# TODO: replace links with url_for
 # TODO: Project video
-# TODO: Remove email password from config before uploading
+# TODO: Remove email password from config before submitting
+# TODO: Clear database before submitting
 
 
 def render_my_template(template: str, **kwargs):
@@ -61,9 +62,10 @@ def render_my_template(template: str, **kwargs):
 
 @app.route("/robots.txt")
 @app.route("/styles.css")
+@app.route("/favicon.ico")
 def get_static_from_root():
     """
-    Make robots.txt available to crawlers and styles.css to browsers.
+    Make robots.txt available to crawlers and styles.css as well as favicon.ico to browsers.
     :return: desired static file
     """
     return send_from_directory(app.static_folder, request.path[1:])

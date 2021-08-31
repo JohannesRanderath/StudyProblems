@@ -53,6 +53,7 @@ def login_to_session(username: str):
     """
     try:
         session["username"] = username
+        session.permanent = False
         return True
     except Exception as e:
         print(e)

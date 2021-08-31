@@ -18,6 +18,7 @@
         {% block script %} {% endblock %}
 
         <link rel="stylesheet" href="/styles.css">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
         <!-- Title of website starts by StudyProblems: followed by a view specific title -->
         <title>StudyProblems: {% block title %} {% endblock %}</title>
