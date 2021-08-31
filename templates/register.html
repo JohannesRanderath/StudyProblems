@@ -7,18 +7,20 @@
 {% block navitems %} {% include "layout/nav_items_logged_out.html" %} {% endblock %}
 
 {% block main %}
-
+    {% if not fill_form %}
+        {% set fill_form = {"username": "", "email": ""} %}
+    {% endif %}
     <h3>Register</h3>
     <p>Passwords must contain 8 characters, of which one has to be an uppercase letter, one a lowercase letter and one a number.</p>
     <form action="{{ url_for("register") }}" method="post">
         <div class="form-group">
             <label for="username">
-                <input class="form-control" autocomplete="off" autofocus name="username" placeholder="Username" type="text" required>
+                <input class="form-control" autocomplete="off" autofocus name="username" placeholder="Username" value="{{ fill_form["username"] }}" type="text" required>
             </label>
         </div>
         <div class="form-group">
             <label for="email">
-                <input class="form-control" name="email" type="email" placeholder="Email (optional)">
+                <input class="form-control" name="email" type="email" placeholder="Email (optional)" value="{{ fill_form["email"] }}">
             </label>
         </div>
         <div class="form-group">

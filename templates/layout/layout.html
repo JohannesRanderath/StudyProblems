@@ -17,8 +17,8 @@
         <!-- custom script section -->
         {% block script %} {% endblock %}
 
-        <link rel="stylesheet" href="{{ url_for('styles.css') }}">
-        <link rel="shortcut icon" href="{{ url_for('favicon.ico') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
         <!-- Title of website starts by StudyProblems: followed by a view specific title -->
         <title>StudyProblems: {% block title %} {% endblock %}</title>
@@ -44,7 +44,8 @@
                 </div>
             </nav>
 
-        <!-- alerts to display -->
+        <!-- alerts to display and get flashed form values-->
+        {% set fill_form = {} %}
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% for category, message in messages %}
                 <div {% if category == "danger" %} class="alert alert-danger"
@@ -52,9 +53,16 @@
                       {% elif category == "info" %} class="alert alert-info"
                       {% elif category == "warning" %} class="alert alert-warning"
                       {% elif category == "important" %} class="alert alert-primary"
-                      {% else %} class="alert alert-secondary" {% endif %}>
-                    {{ message }}
+                      {% elif category == "message" %} class="alert alert-secondary" {% endif %}>
+                    {% if not category == "form-data" %}
+                        {{ message }}
+                    {% endif %}
                 </div>
+                {% if category == "form-data" %}
+                {%      for pair in message.split(",") %}
+                {%          set _ =  fill_form.__setitem__(pair.split(":")[0], pair.split(":")[1]) %}
+                {%      endfor %}
+                {% endif %}
             {% endfor %}
         {% endwith %}
 

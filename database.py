@@ -99,7 +99,7 @@ def update_email_confirmed(email: str):
     try:
         db = get_db()
         cur = db.cursor()
-        if cur.execute("SELECT email FROM users WHERE email=?;", (email, )).fetchone()[0]:
+        if cur.execute("SELECT email FROM users WHERE email=?;", (email, )).fetchone():
             cur.execute("UPDATE users SET email_confirmed=1 WHERE email=?;", (email, ))
             db.commit()
             return True
@@ -120,7 +120,7 @@ def get_user_email(username:str):
     try:
         db = get_db()
         cur = db.cursor()
-        if cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username, )).fetchone()[0] == 1:
+        if cur.execute("SELECT email_confirmed FROM users WHERE username=?;", (username, )).fetchone():
             return cur.execute("SELECT email FROM users WHERE username=?;", (username,)).fetchone()[0]
         else:
             return False
@@ -139,9 +139,9 @@ def get_user_hash(username: str):
     try:
         db = get_db()
         cur = db.cursor()
-        user_hash = cur.execute("SELECT hash FROM users WHERE username=?;", (username,)).fetchone()[0]
+        user_hash = cur.execute("SELECT hash FROM users WHERE username=?;", (username,)).fetchone()
         if user_hash:
-            return user_hash
+            return user_hash[0]
         return None
     except Exception as e:
         print("In db.get_user_hash", e)

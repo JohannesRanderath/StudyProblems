@@ -20,11 +20,23 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: Try to preserve form content when providing illegal parameters
+# TODO: BUG: reset_password link does not work
 # TODO: Project video
 # TODO: Remove email password from config before submitting
 # TODO: Remove debug print statements
 # TODO: Clear database before submitting
+
+
+def flash_form_data(request_form):
+    try:
+        form_data = {key: request_form.get(key) for key in request_form.keys()}
+
+        form_data_strings = [key + ":" + form_data[key] for key in form_data.keys()]
+        flash(",".join(form_data_strings), "form-data")
+        return True
+    except Exception as e:
+        print("In app.flash_form_data: ", e)
+        return False
 
 
 def render_my_template(template: str, **kwargs):
@@ -270,12 +282,15 @@ def ask_question():
         question = request.form.get("question")
         if not friend or not question:
             flash("Please supply all required parameters", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("ask_question"))
         if not user_exists(friend):
             flash("User does not exist", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("ask_question"))
         if not add_question(current_user(), friend, question):
             flash("An error occurred, please try again later", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("ask_question"))
         add_message(current_user(), friend, "asked_question")
         if "new_question" not in get_email_preferences_not(friend):
@@ -305,12 +320,15 @@ def answer_question():
         answer = request.form.get("answer")
         if not question_id or not answer:
             flash("Please supply all required parameters", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("to_answer"))
         if not question_exists(question_id) or not question:
             flash("Question not found", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("to_answer"))
         if not add_answer(question_id, answer):
             flash("An error occurred, please try again.", "danger")
+            flash_form_data(request.form)
             redirect(url_for("to_answer"))
         add_message(current_user(), question["sender"], "answered_question")
         # send email if user didn't opt out and confirmed their email.
@@ -484,12 +502,15 @@ def login():
             return redirect(url_for("login"))
         if not request.form.get("password"):
             flash("Password required", "warning")
+            flash_form_data(request.form)
             return redirect(url_for("login"))
         if not verify_password(username, request.form.get("password")):
             flash("Wrong username or password", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("login"))
         if not login_to_session(username):
             flash("An error occurred, please try again.", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("login"))
         flash("Login successful", "success")
         return redirect(url_for("home"))
@@ -513,26 +534,33 @@ def register():
         # Check given data
         if not username:
             flash("Username required", "warning")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         if not password:
             flash("Password required", "warning")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         if not request.form.get("confirmation"):
             flash("Please confirm password", "warning")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         if user_exists(username):
             flash("Username already exists", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         if not password == request.form.get("confirmation"):
             flash("Passwords do not match", "warning")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         if not check_password_requirements(password):
             flash("Password does not meet requirements")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
 
         # Register user
         if not create_new_user(username, generate_password_hash(password)):
             flash("An unexpected error occurred. Please try again later", "danger")
+            flash_form_data(request.form)
             return redirect(url_for("register"))
         # email is optional
         if email and is_email(email):
@@ -541,10 +569,12 @@ def register():
                               html_confirmation_email(generate_email_confirmation_link(
                                   email, app.config["EMAIL_CONFIRMATION_SALT"]))):
                 flash("An error occurred. Please try again later.", "danger")
+                flash_form_data(request.form)
                 return redirect(url_for("register"))
         # Log in automatically
         if not login_to_session(username):
             flash("An error occurred, please try again", "danger")
+            flash_form_data(request.form)
             return render_my_template(url_for("register"))
         flash("You are successfully registered", "success")
         return redirect(url_for("home"))

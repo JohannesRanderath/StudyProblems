@@ -7,7 +7,13 @@
 {% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
 
 {% block main %}
-
+    {% if not fill_form %}
+        {% set fill_form = {"question": ""} %}
+    {% else %}
+        {% if not ask_friend %}
+            {% set ask_friend = fill_form["friend"] %}
+        {% endif %}
+    {% endif %}
     <h3>Ask question</h3>
     {% if not friends %}
         <p>First, add a <a href="{{ url_for("manage_friends") }}">friend</a>.</p>
@@ -25,7 +31,7 @@
             </div>
             <div class="form-group">
                 <label>
-                    <input class="form-control" type="text" name="question" placeholder="Question" autofocus autocomplete="off" required>
+                    <input class="form-control" type="text" name="question" placeholder="Question" value="{{ fill_form["question"] }}" autofocus autocomplete="off" required>
                 </label>
             </div>
             <button class="btn btn-primary" type="submit">Ask</button>

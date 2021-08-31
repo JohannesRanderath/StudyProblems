@@ -7,11 +7,15 @@
 {% block navitems %} {% include "layout/nav_items_logged_out.html" %} {% endblock %}
 
 {% block main %}
+    <!-- Get form data if redirected from same page -->
+    {% if not fill_form %}
+        {% set fill_form = {"username": "", "password": ""} %}
+    {% endif %}
     <h3>Log in</h3>
     <form action="{{ url_for("login") }}" method="post">
         <div class="form-group">
             <label for="username">
-                <input class="form-control" autocomplete="off" autofocus type="text" name="username" placeholder="Username" value="{{ request.form['username'] }}" required>
+                <input class="form-control" autocomplete="off" autofocus type="text" name="username" placeholder="Username" value="{{ fill_form['username'] }}" required>
             </label>
         </div>
         <div class="form-group">

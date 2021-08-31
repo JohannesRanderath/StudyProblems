@@ -7,7 +7,9 @@
 {% block navitems %} {% include "layout/nav_items_logged_in.html" %} {% endblock %}
 
 {% block main %}
-
+    {% if not fill_form %}
+        {% set fill_form = {"answer": ""} %}
+    {% endif %}
     <h3>Answer a question</h3>
     <p>{{ question["sender"] }} asked: <i>{{ question["question"] }}</i></p>
     <form action="{{ url_for("answer_question") }}" method="post">
@@ -15,7 +17,7 @@
             <input type="text" name="id" value="{{ question["id"] }}" hidden readonly required>
         </label>
         <label>
-            <input type="text" name="answer" autofocus autocomplete="off" placeholder="Question" required>
+            <input type="text" name="answer" autofocus autocomplete="off" placeholder="Question" value="{{ fill_form["answer"] }}" required>
         </label>
         <button type="submit" class="btn btn-primary">Answer</button>
     </form>
