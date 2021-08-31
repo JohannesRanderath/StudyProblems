@@ -20,7 +20,6 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: BUG: reset_password link does not work
 # TODO: Project video
 # TODO: Remove email password from config before submitting
 # TODO: Remove debug print statements
@@ -669,7 +668,7 @@ def reset_password(token):
             username = decrypt_token(token, app.config["RESET_PASSWORD_SALT"])
             return render_my_template("reset_password.html", username=username)
         except Exception as e:
-            print(e)
+            print("In app.reset_password: ", e)
             return render_my_template("bad_password_reset_link.html")
 
 
