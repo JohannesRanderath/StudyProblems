@@ -18,7 +18,7 @@ def send_email(recipient: str, subject: str, html: str):
     try:
         mail.send(msg)
     except Exception as e:
-        print(e)
+        print("In mail.send_email: ", e)
         return False
     return True
 

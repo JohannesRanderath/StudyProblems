@@ -24,7 +24,7 @@ def close_connection(exception):
     :return:
     """
     if exception:
-        print(exception)
+        print("In db.close_connection", exception)
     db = getattr(g, '_database', None)
     if db:
         db.close()

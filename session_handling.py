@@ -40,7 +40,7 @@ def logout_from_session():
         session.clear()
         return True
     except Exception as e:
-        print(e)
+        print("In session_handling.logout_from_session: ", e)
         return False
 
 
@@ -56,5 +56,5 @@ def login_to_session(username: str):
         session.permanent = False
         return True
     except Exception as e:
-        print(e)
+        print("In session_handling.login_to_session: ", e)
         return False

@@ -593,7 +593,7 @@ def confirm(token):
     try:
         email = decrypt_token(token, app.config["EMAIL_CONFIRMATION_SALT"])
     except Exception as e:
-        print(e)
+        print("In app.confirm: ", e)
         return render_my_template("bad_confirmation_link.html")
     if not update_email_confirmed(email):
         flash("An error occurred, please try again", "danger")
@@ -623,7 +623,7 @@ def change_email(token):
         flash("Email updated!", "success")
         return redirect(url_for("home"))
     except Exception as e:
-        print(e)
+        print("In app.change_email: ", e)
         return render_my_template("bad_change_email_link.html")
 
 
