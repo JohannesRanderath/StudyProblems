@@ -9,10 +9,10 @@
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
-    MAIL_USERNAME = "joranderathsg@gmail.com"
-    MAIL_PASSWORD = "hgtyawsgcnvsfpnm"
+    MAIL_USERNAME = ""  # TODO: Add email address
+    MAIL_PASSWORD = ""  # TODO: Add email password
 ***REMOVED***
-    MAIL_DEFAULT_SENDER = "joranderathsg@gmail.com"
+    MAIL_DEFAULT_SENDER = ""  # TODO: Add email address
 
 ***REMOVED***
 

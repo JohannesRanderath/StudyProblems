@@ -20,10 +20,6 @@ app.config.from_object("config.Config")
 Session(app)
 
 
-# TODO: Project video
-# TODO: Remove email password from config before submitting
-
-
 def flash_form_data(request_form):
     try:
         form_data = {key: request_form.get(key) for key in request_form.keys()}
