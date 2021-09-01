@@ -110,7 +110,7 @@ def update_email_confirmed(email: str):
         return False
 
 
-def get_user_email(username:str):
+def get_user_email(username: str):
     """
     Get email if one is associated with the given account
     :param username: username, must exist in database
@@ -403,7 +403,8 @@ def get_friends(username: str):
         friends = cur.execute("SELECT user1, user2 FROM friends WHERE (user1=? OR user2=?) AND confirmed=1;",
                               (user_id, user_id)).fetchall()
         friends = [friend[0] if not friend[0] == user_id else friend[1] for friend in friends]
-        friends = [cur.execute("SELECT username FROM users WHERE id=?;", (friend, )).fetchone()[0] for friend in friends]
+        friends = [cur.execute("SELECT username FROM users WHERE id=?;", (friend, )).fetchone()[0]
+                   for friend in friends]
         return friends
     except Exception as e:
         print("In db.get_friends: ", e)
@@ -511,7 +512,9 @@ def get_question(question_id: int):
         cur = db.cursor()
         q = cur.execute("SELECT id, sender, recipient, question_text, answer FROM questions WHERE id=?;",
                         (question_id, )).fetchone()
-        question = {"id": q[0], "sender": cur.execute("SELECT username FROM users WHERE id=?;", (q[1], )).fetchone()[0], "recipient": cur.execute("SELECT username FROM users WHERE id=?;", (q[2], )).fetchone()[0], "question": q[3], "answer": q[4]}
+        question = {"id": q[0], "sender": cur.execute("SELECT username FROM users WHERE id=?;", (q[1], )).fetchone()[0],
+                    "recipient": cur.execute("SELECT username FROM users WHERE id=?;", (q[2], )).fetchone()[0],
+                    "question": q[3], "answer": q[4]}
         return question
     except Exception as e:
         print("In db.get_question: ", e)

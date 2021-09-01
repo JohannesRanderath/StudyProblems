@@ -1,9 +1,10 @@
 .main {
     /* html content block */
     text-align: center;
-    overflow-x: auto;
+    overflow-x: hidden;
     padding-top: 70px;
     padding-bottom: 70px;
+    width: 100%;
 }
 
 .form-control {
@@ -33,6 +34,14 @@
     column-span: 3;
 }
 
+/* My checkboxes wrapped in labels and divs seem to make the page jump on click in Firefox which is, let's say...
+inconvenient. Setting their position explicitly to relative seems to solve this problem for some reason.
+Thanks to StackOverflow for this fix <3
+ */
 .nojump {
     position: relative;
+}
+
+table {
+    width: 100%;
 }

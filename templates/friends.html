@@ -73,7 +73,7 @@
     <br>
     <!-- Second functionality: Overview of friends, functionality to delete friends and ask questions -->
     <h3>Your friends</h3>
-    <p>You have {% if numOfFriends > 0 %}{{ numOfFriends }} friends.{% else %} no friends yet.{% endif %}</p>
+    <p>You have {% if numOfFriends == 1 %} 1 friend.{% elif numOfFriends > 0 %}{{ numOfFriends }} friends.{% else %} no friends yet.{% endif %}</p>
     {% if numOfFriends > 0 %}
         <table class="table table-striped">
             <tbody>

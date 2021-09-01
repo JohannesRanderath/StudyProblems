@@ -22,8 +22,6 @@ Session(app)
 
 # TODO: Project video
 # TODO: Remove email password from config before submitting
-# TODO: Remove debug print statements
-# TODO: Clear database before submitting
 
 
 def flash_form_data(request_form):
@@ -148,7 +146,7 @@ def manage_friends():
 def get_usernames_list():
     """
     NO VIEW
-    AJAX call to get usernames starting with a given substring.
+    AJAX call to get usernames starting with a given substring that are not friends with the current user.
     Used in user search to send friend requests
     :return: json list of usernames starting with substring <startswith> or an empty list if no substring given
     """
@@ -161,6 +159,8 @@ def get_usernames_list():
         usernames = [username[0] for username in usernames]
         if current_user() in usernames:
             usernames.remove(current_user())
+        friends = get_friends(current_user())
+        usernames = [username for username in usernames if username not in friends]
         return jsonify(usernames)
 
 
@@ -172,7 +172,7 @@ def add_friend():
     Logic function to add friend request to library and send notifications to other user.
     :return: redirect back to /manage_friends
     """
-    username = request.form.get("username")
+    username = request.form.get("username").lower()
     user = current_user()
     # other user has to be given, must exist and can't be the same as the user logged in.
     if not username or username == user or not user_exists(username):
@@ -204,14 +204,14 @@ def accept_friend_request():
     :return: redirect to home (/)
     """
     username = current_user()
-    if not confirm_friend(request.form.get("username"), username) \
+    if not confirm_friend(request.form.get("username").lower(), username) \
             or not delete_message(request.form.get("message_id")):
         flash("An error occurred. Please try again later", "danger")
         return redirect(url_for("home"))
-    add_message(username, request.form.get("username"), "accepted_friend_request")
+    add_message(username, request.form.get("username").lower(), "accepted_friend_request")
     # if they didn't opt out and confirmed their email, send them an email.
-    if "accepted_friend" not in get_email_preferences_not(request.form.get("username")):
-        send_user_email(request.form.get("username"), "New friend", html_accepted_friend_mail(username))
+    if "accepted_friend" not in get_email_preferences_not(request.form.get("username").lower()):
+        send_user_email(request.form.get("username").lower(), "New friend", html_accepted_friend_mail(username))
     flash("Friend request accepted.", "success")
     return redirect(url_for("home"))
 
@@ -225,10 +225,10 @@ def decline_friend_request():
     :return: redirect back to home (/)
     """
     if not delete_message(request.form.get("message_id")) \
-            or not delete_friends_from_db(current_user(), request.form.get("username")):
+            or not delete_friends_from_db(current_user(), request.form.get("username").lower()):
         flash("An error occurred. Please try again later", "danger")
         return redirect(url_for("home"))
-    add_message(current_user(), request.form.get("username"), "declined_friend_request")
+    add_message(current_user(), request.form.get("username").lower(), "declined_friend_request")
     # No email is sent for declined requests
     flash("Friend request declined.", "important")
     return redirect(url_for("home"))
@@ -242,7 +242,7 @@ def remove_friend():
     Logic function to remove friendship from database and notify former friend.
     :return: redirect back to /manage_friends
     """
-    username = request.form.get("username")
+    username = request.form.get("username").lower()
     if not username or not delete_friends_from_db(current_user(), username) \
             or not delete_message(request.form.get("message_id")):
         flash("An error occurred, please try again later", "danger")
@@ -495,7 +495,7 @@ def login():
     :return: redirect back to /login if unsuccessful
     """
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form.get("username").lower()
         if not username:
             flash("Username required", "warning")
             return redirect(url_for("login"))
@@ -527,7 +527,7 @@ def register():
     :return: redirect back to /register when unsuccessful
     """
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form.get("username").lower()
         password = request.form.get("password")
         email = request.form.get("email")
         # Check given data
@@ -638,7 +638,7 @@ def reset_password(token):
     :return: redirect back to reset_password if unsuccessful
     """
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form.get("username").lower()
         password = request.form.get("new_password")
         confirmation = request.form.get("confirmation")
         if not username:
@@ -680,7 +680,7 @@ def request_password_reset():
     :return: request_password_reset.html
     """
     if request.method == "POST":
-        username = request.form.get("username")
+        username = request.form.get("username").lower()
         if not username:
             flash("Username required", "warning")
             return render_my_template("request_password_reset.html")

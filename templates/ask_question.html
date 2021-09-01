@@ -22,7 +22,7 @@
             <div class="form-group">
                 <label>
                     <select name="friend" required>
-                        <option disabled {% if not ask_friend %}selected{% endif %}>Friend</option>
+                        <option disabled {% if not ask_friend or ask_friend not in friends %}selected{% endif %}>Friend</option>
                         {% for friend in friends %}
                             <option name="{{ friend }}" {% if ask_friend == friend %}selected{% endif %}>{{ friend }}</option>
                         {% endfor %}

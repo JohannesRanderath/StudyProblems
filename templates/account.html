@@ -14,6 +14,7 @@
     <form action="{{ url_for("account") }}" method="post">
         <label for="data identifier" hidden>
             <input name="type" value="change_password" hidden required>
+            <input name="username" value="{{ username }}" hidden required> <!-- For browsers to know what user to save the password for -->
         </label>
         <div class="form-group">
             <label for="current password">
