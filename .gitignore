@@ -1,3 +1,4 @@
 /flask_session/
 /venv/
 /.idea/
+config.py
